@@ -1,8 +1,5 @@
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using SampleApi.Repository;
 using SampleApi.Models;
+using SampleApi.Repository;
 
 namespace SampleApi.Controllers
 {
