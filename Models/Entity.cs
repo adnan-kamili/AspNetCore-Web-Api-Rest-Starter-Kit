@@ -10,8 +10,12 @@ namespace SampleApi.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public T Id { get; set; }
 
-        object IEntity.Id { get; set; }
-        
+        object IEntity.Id
+        {
+            get { return this.Id; }
+            set { this.Id = (T)Convert.ChangeType(value, typeof(T)); }
+        }
+
         private DateTime? createdDate;
 
         [DataType(DataType.DateTime)]

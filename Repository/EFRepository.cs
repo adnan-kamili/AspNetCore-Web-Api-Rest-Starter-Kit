@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 using SampleApi.Models;
 
@@ -161,17 +163,19 @@ namespace SampleApi.Repository
             context.Set<TEntity>().Add(entity);
         }
 
-        public virtual void Update<TEntity>(TEntity entity) where TEntity : class, IEntity
+        public virtual void Update<TEntity>(TEntity entity, TEntity updatedEntity) where TEntity : class, IEntity
         {
+            updatedEntity.Id = entity.Id;
+            PropertyInfo[] properties = entity.GetType().GetProperties();
+            foreach (PropertyInfo propertyInfo in properties)
+            {
+                if (propertyInfo.GetValue(updatedEntity, null) != null)
+                {
+                    propertyInfo.SetValue(entity, propertyInfo.GetValue(updatedEntity, null), null);
+                }
+            }
             entity.ModifiedDate = DateTime.UtcNow;
-            context.Set<TEntity>().Attach(entity);
-            context.Entry(entity).State = EntityState.Modified;
-        }
-
-        public virtual void Delete<TEntity>(object id) where TEntity : class, IEntity
-        {
-            TEntity entity = context.Set<TEntity>().Find(id);
-            Delete(entity);
+            context.Entry(entity).Property(e => e.CreatedDate).IsModified = false;
         }
 
         public virtual void Delete<TEntity>(TEntity entity) where TEntity : class, IEntity

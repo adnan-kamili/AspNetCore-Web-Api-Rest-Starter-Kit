@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using SampleApi.Filters;
 using System.Threading.Tasks;
@@ -46,13 +48,14 @@ namespace SampleApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        public virtual async Task<IActionResult> Update(int id, [FromBody] TEntity entity)
+        public virtual async Task<IActionResult> Update(int id, [FromBody] TEntity updatedEntity)
         {
-            if (!repository.GetExists<TEntity>(e => e.Id == id))
+            TEntity entity = repository.GetById<TEntity>(id);
+            if (entity == null)
             {
-                return NotFound(new { message = $"{EntityName} does not exist!" });
+                 return NotFound(new { message = $"{EntityName} does not exist!" });
             }
-            repository.Update(entity);
+            repository.Update(entity, updatedEntity);
             await repository.SaveAsync();
             return NoContent();
         }
@@ -60,14 +63,14 @@ namespace SampleApi.Controllers
         [HttpDelete("{id}")]
         public virtual async Task<IActionResult> Delete(int id)
         {
-            if (!repository.GetExists<TEntity>(e => e.Id == id))
+            TEntity entity = repository.GetById<TEntity>(id);
+            if (entity == null)
             {
-                return NotFound(new { message = $"{EntityName} does not exist!" });
+                 return NotFound(new { message = $"{EntityName} does not exist!" });
             }
-            repository.Delete<TEntity>(id);
+            repository.Delete(entity);
             await repository.SaveAsync();
             return NoContent();
-
         }
     }
 }
