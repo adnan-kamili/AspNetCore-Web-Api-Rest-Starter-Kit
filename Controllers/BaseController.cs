@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using SampleApi.Filters;
@@ -17,21 +18,37 @@ namespace SampleApi.Controllers
 
         protected string EntityName = typeof(TEntity).Name;
 
+        protected const int MinLimit = 10;
+
+        protected const int MaxLimit = 100;
+
+        protected const int FirstPage = 1;
+
         public BaseController(IRepository repository)
         {
             this.repository = repository;
         }
 
+        [PaginationHeadersFilter]
         [HttpGet]
-        public virtual IActionResult GetList()
+        public virtual async Task<IActionResult> GetList([FromQuery] int page = FirstPage, [FromQuery] int limit = MinLimit)
         {
-            return Json(repository.GetAll<TEntity>());
+            page = (page < FirstPage) ? FirstPage : page;
+            limit = (limit < MinLimit) ? MinLimit : limit;
+            limit = (limit > MaxLimit) ? MaxLimit : limit;
+            int skip = (page - 1) * limit;
+            int count =  await repository.GetCountAsync<TEntity>(null);
+            HttpContext.Items["count"] = count.ToString();
+            HttpContext.Items["page"] = page.ToString();
+            HttpContext.Items["limit"] = limit.ToString();
+            IEnumerable<TEntity> entityList = await repository.GetAllAsync<TEntity>(null, null, skip, limit);
+            return Json(entityList);
         }
 
         [HttpGet("{id}")]
-        public virtual IActionResult Get(int id)
+        public virtual async Task<IActionResult> Get([FromRoute] int id)
         {
-            TEntity entity = repository.GetById<TEntity>(id);
+            TEntity entity = await repository.GetByIdAsync<TEntity>(id);
             if (entity != null)
             {
                 return Json(entity);
@@ -48,12 +65,12 @@ namespace SampleApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        public virtual async Task<IActionResult> Update(int id, [FromBody] TEntity updatedEntity)
+        public virtual async Task<IActionResult> Update([FromRoute] int id, [FromBody] TEntity updatedEntity)
         {
             TEntity entity = repository.GetById<TEntity>(id);
             if (entity == null)
             {
-                 return NotFound(new { message = $"{EntityName} does not exist!" });
+                return NotFound(new { message = $"{EntityName} does not exist!" });
             }
             repository.Update(entity, updatedEntity);
             await repository.SaveAsync();
@@ -61,12 +78,12 @@ namespace SampleApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public virtual async Task<IActionResult> Delete(int id)
+        public virtual async Task<IActionResult> Delete([FromRoute] int id)
         {
             TEntity entity = repository.GetById<TEntity>(id);
             if (entity == null)
             {
-                 return NotFound(new { message = $"{EntityName} does not exist!" });
+                return NotFound(new { message = $"{EntityName} does not exist!" });
             }
             repository.Delete(entity);
             await repository.SaveAsync();

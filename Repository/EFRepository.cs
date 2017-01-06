@@ -15,10 +15,6 @@ namespace SampleApi.Repository
     {
         protected readonly TContext context;
 
-        protected const int DefaultLimit = 10;
-
-        protected const int MaxLimit = 100;
-
         public EFRepository(TContext context)
         {
             this.context = context;
@@ -56,16 +52,10 @@ namespace SampleApi.Repository
                 query = query.Skip(skip.Value);
             }
 
-            if (!limit.HasValue)
+            if (limit.HasValue)
             {
-                limit = DefaultLimit;
+                query = query.Take(limit.Value);
             }
-            if (limit.Value > MaxLimit)
-            {
-                limit = MaxLimit;
-            }
-            query = query.Take(limit.Value);
-
             return query;
         }
 
