@@ -6,7 +6,8 @@ namespace SampleApi.Models
     {
         [Required]
         public string Name { get; set; }
-        public string Cost { get; set; }
+        [Required]
+        public int Cost { get; set; }
         public string Color { get; set; }
     }
 }
