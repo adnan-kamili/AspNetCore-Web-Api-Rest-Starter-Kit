@@ -149,7 +149,7 @@ namespace SampleApi.Repository
         }
         public virtual void Create<TEntity>(TEntity entity) where TEntity : class, IEntity
         {
-            entity.CreatedDate = DateTime.UtcNow;
+            entity.CreatedAt = DateTime.UtcNow;
             context.Set<TEntity>().Add(entity);
         }
 
@@ -164,8 +164,8 @@ namespace SampleApi.Repository
                     propertyInfo.SetValue(entity, propertyInfo.GetValue(updatedEntity, null), null);
                 }
             }
-            entity.ModifiedDate = DateTime.UtcNow;
-            context.Entry(entity).Property(e => e.CreatedDate).IsModified = false;
+            entity.ModifiedAt = DateTime.UtcNow;
+            context.Entry(entity).Property(e => e.CreatedAt).IsModified = false;
         }
 
         public virtual void Delete<TEntity>(TEntity entity) where TEntity : class, IEntity

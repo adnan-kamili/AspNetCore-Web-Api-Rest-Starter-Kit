@@ -1,20 +1,16 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace SampleApi.Models
 {
-    public abstract class Entity<T> : IEntity<T>
+    public class ApplicationUser : IdentityUser
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public T Id { get; set; }
+        [Required]
+        public string Name { get; set; }
 
-        object IEntity.Id
-        {
-            get { return this.Id; }
-            set { this.Id = (T)Convert.ChangeType(value, typeof(T)); }
-        }
+        [Required]
+        public int AccountId { get; set; }
 
         private DateTime? createdAt;
 

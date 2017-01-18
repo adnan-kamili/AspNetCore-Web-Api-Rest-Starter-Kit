@@ -1,0 +1,23 @@
+PATCH http://localhost:5000/api/v1/items/1
+content-type: application/json
+
+{
+    "name": "sample8",
+    "cost": 10000000000000000000000000000000000000
+}
+
+http://localhost:5000/api/v1/auth/
+
+POST http://localhost:5000/api/v1/auth/register
+content-type: application/json
+authorization: Bearer sometoken
+
+{
+    "username": "adnan",
+    "password" : "adnan124A!"
+    "email": "adnan.kamili@gmail.com",
+    "fullNAme": "Adnan Kamili"
+}
+
+GET http://localhost:5000/api/v1/items
+authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlZJSUVUNVRaQU9TR0FRR0daRUcyUkxQWU5NS05aVldBRVdEVUg5VFciLCJ0eXAiOiJKV1QifQ.eyJ1bmlxdWVfbmFtZSI6ImFkbmFuLmthbWlsaUBnbWFpbC5jb20iLCJBc3BOZXQuSWRlbnRpdHkuU2VjdXJpdHlTdGFtcCI6IjRiOWU2YWM5LTQ2ZDEtNDViNi1hMDMwLWIwMGE4YzFhOTIwYiIsImp0aSI6ImU0N2VmYjc4LTQ1MjMtNGMzNS05YzY0LTZmNDkwNDgyMWRjMCIsInVzYWdlIjoiYWNjZXNzX3Rva2VuIiwic2NvcGUiOiJvcGVuaWQiLCJzdWIiOiI5N2IzOTE5Zi05ZjAxLTQzYTgtOTE4OC0yZDE5NzU2NThiZjgiLCJuYmYiOjE0ODQ3MjQ4MjcsImV4cCI6MTQ4NDcyNjYyNywiaWF0IjoxNDg0NzI0ODI3LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAvIn0.aW99qQElpVo9HtYxPT9IQSZ3RBcUtbLe_OUt1-8zujfPYi34ML6LgHXe_AMw2EM_PIiUnCOCsDbIw0zIWzL0iGW296yTNRywD8S7_vxosBhK-2wT030q7qvQrtYQZu1crR04jecGHilJEbp0aoATEsyVhCgb6YWl5PyzsLROcdTN2MG3z6BnFjQ8VYZeOX5bTOZmVxSdzEMTFVpbKM-4JXvv0N5NI4eWRy6ks46mBPiaYyTa5_jfwNnci84VpD5t_hLyUwxrRuNrYtWLhCHo6EST6LtrvfYd3IJ-A2343drAyIHNh_wf-AE30nmu_rUopayTFTOiprHoO7hUFV3EgQ

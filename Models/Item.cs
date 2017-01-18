@@ -9,5 +9,7 @@ namespace SampleApi.Models
         [Required]
         public int Cost { get; set; }
         public string Color { get; set; }
+        [Required]
+        public int AccountId { get; set; }
     }
 }

@@ -56,7 +56,7 @@ namespace SampleApi.Controllers
             return NotFound(new { message = EntityName + " does not exist!" });
         }
 
-        [HttpPost]
+        //[HttpPost]
         public virtual async Task<IActionResult> Create([FromBody] TEntity entity)
         {
             repository.Create(entity);
