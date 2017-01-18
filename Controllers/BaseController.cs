@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +36,7 @@ namespace SampleApi.Controllers
             limit = (limit < MinLimit) ? MinLimit : limit;
             limit = (limit > MaxLimit) ? MaxLimit : limit;
             int skip = (page - 1) * limit;
-            int count =  await repository.GetCountAsync<TEntity>(null);
+            int count = await repository.GetCountAsync<TEntity>(null);
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
@@ -56,7 +55,7 @@ namespace SampleApi.Controllers
             return NotFound(new { message = EntityName + " does not exist!" });
         }
 
-        //[HttpPost]
+        [HttpPost]
         public virtual async Task<IActionResult> Create([FromBody] TEntity entity)
         {
             repository.Create(entity);

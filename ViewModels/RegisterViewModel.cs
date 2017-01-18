@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using SampleApi.Models;
 
 namespace SampleApi.ViewModels
 {
-    public class RegistrationViewModel
+    public class RegisterViewModel
     {
         [Required]
         public string Name { get; set; }
