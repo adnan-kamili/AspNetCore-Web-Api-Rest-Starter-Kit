@@ -40,7 +40,10 @@
   },
   "buildOptions": {
     "emitEntryPoint": true,
-    "preserveCompilationContext": true
+    "preserveCompilationContext": true,
+    "copyToOutput": {
+     "include": [ "appsettings.json", "hosting.json" ]
+   }
   },
   "runtimeOptions": {
     "configProperties": {
@@ -49,7 +52,8 @@
   },
   "publishOptions": {
     "include": [
-      "appsettings.json"
+      "appsettings.json",
+      "hosting.json"
     ]
   },
   "scripts": {

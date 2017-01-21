@@ -8,16 +8,17 @@ content-type: application/json
 
 http://localhost:5000/api/v1/auth/
 
-POST http://localhost:5000/api/v1/auth/register
+POST http://localhost:5000/api/v1/accounts
 content-type: application/json
 authorization: Bearer sometoken
 
 {
-    "username": "adnan",
-    "password" : "adnan124A!"
-    "email": "adnan.kamili@gmail.com",
-    "fullNAme": "Adnan Kamili"
+    "username": "adnan346fj",
+    "password" : "adnan124A!",
+    "email": "adnan.ka5mifli3j4@gmail.com",
+    "name": "Adnan Kamili",
+    "company": "Adnan Kamili"
 }
 
-GET http://localhost:5000/api/v1/items
-authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlZJSUVUNVRaQU9TR0FRR0daRUcyUkxQWU5NS05aVldBRVdEVUg5VFciLCJ0eXAiOiJKV1QifQ.eyJ1bmlxdWVfbmFtZSI6ImFkbmFuLmthbWlsaUBnbWFpbC5jb20iLCJBc3BOZXQuSWRlbnRpdHkuU2VjdXJpdHlTdGFtcCI6IjRiOWU2YWM5LTQ2ZDEtNDViNi1hMDMwLWIwMGE4YzFhOTIwYiIsImp0aSI6ImU0N2VmYjc4LTQ1MjMtNGMzNS05YzY0LTZmNDkwNDgyMWRjMCIsInVzYWdlIjoiYWNjZXNzX3Rva2VuIiwic2NvcGUiOiJvcGVuaWQiLCJzdWIiOiI5N2IzOTE5Zi05ZjAxLTQzYTgtOTE4OC0yZDE5NzU2NThiZjgiLCJuYmYiOjE0ODQ3MjQ4MjcsImV4cCI6MTQ4NDcyNjYyNywiaWF0IjoxNDg0NzI0ODI3LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAvIn0.aW99qQElpVo9HtYxPT9IQSZ3RBcUtbLe_OUt1-8zujfPYi34ML6LgHXe_AMw2EM_PIiUnCOCsDbIw0zIWzL0iGW296yTNRywD8S7_vxosBhK-2wT030q7qvQrtYQZu1crR04jecGHilJEbp0aoATEsyVhCgb6YWl5PyzsLROcdTN2MG3z6BnFjQ8VYZeOX5bTOZmVxSdzEMTFVpbKM-4JXvv0N5NI4eWRy6ks46mBPiaYyTa5_jfwNnci84VpD5t_hLyUwxrRuNrYtWLhCHo6EST6LtrvfYd3IJ-A2343drAyIHNh_wf-AE30nmu_rUopayTFTOiprHoO7hUFV3EgQ
+GET http://localhost:5000/api/v1/items/1
+authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlZTXzZSWUpUV1NYTS1MUzZVV1BFUE1FNzRJWTFQRjI2SkRFUVU1RkciLCJ0eXAiOiJKV1QifQ.eyJ1bmlxdWVfbmFtZSI6ImFkbmFuLmthbWlsaUBnbWFpbC5jb20iLCJBc3BOZXQuSWRlbnRpdHkuU2VjdXJpdHlTdGFtcCI6IjRiOWU2YWM5LTQ2ZDEtNDViNi1hMDMwLWIwMGE4YzFhOTIwYiIsImp0aSI6IjFmYjgzMmU1LWIwM2QtNDU0OS1hNTU3LWEyZmMxYjlkYWNjMyIsInVzYWdlIjoiYWNjZXNzX3Rva2VuIiwic2NvcGUiOiJvcGVuaWQiLCJzdWIiOiI5N2IzOTE5Zi05ZjAxLTQzYTgtOTE4OC0yZDE5NzU2NThiZjgiLCJuYmYiOjE0ODQ3MjUxMDgsImV4cCI6MTQ4NDcyNjkwOCwiaWF0IjoxNDg0NzI1MTA4LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAvIn0.iv1QxdC7LIYDTlcM551gn8PDGueBKrAgB3rSffYk9ICdW4sp_FvnXhRyUMbftviWIY7_f4B9kybRZxiZ4zq_fmmI2-LtyZHeSF-MqpWWaEsGxZojQocg3RuHk-hE_MvzzXkOLyfXGnmyhMSiOJHv36KXzzQyktPYgvwBE7fa_seAUIc3v72LLZKX83VSY_HZvZ7g2SwNU50EtVMJYBA5s9kAc3VgIfw-X4B7PHecLQBaHHgYoUgM01k_7G9pXWAvlLDc_r48DFmDCTEogI0apTDDnSstAzJ8XW9trICEokNEgfpLr8njezXQscaHnw7RT4EMeB4XcVrvXkAzxuXWdQ

@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 using SampleApi.Repository;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 using SampleApi.Models;
 using SampleApi.ViewModels;
 using SampleApi.Filters;
+using SampleApi.Options;
 
 
 namespace SampleApi.Controllers
@@ -19,10 +21,11 @@ namespace SampleApi.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRepository _repository;
-        public AccountsController(IRepository repository, UserManager<ApplicationUser> userManager)
+        public AccountsController(IRepository repository, UserManager<ApplicationUser> userManager, IOptions<AppOptions> appOptions)
         {
             this._repository = repository;
             this._userManager = userManager;
+            Console.Write("appOptions: ",appOptions.Value.ConnectionStrings.MySqlProvider);
         }
 
         [AllowAnonymous]

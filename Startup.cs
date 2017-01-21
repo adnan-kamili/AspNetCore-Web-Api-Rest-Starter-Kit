@@ -7,42 +7,42 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MySQL.Data.Entity.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using SampleApi.Models;
-using SampleApi.Repository;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using SampleApi.Models;
+using SampleApi.Repository;
+using SampleApi.Options;
 
 namespace SampleApi
 {
     public class Startup
     {
+        public IConfigurationRoot Configuration { get; set; }
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
         }
 
-        public IConfigurationRoot Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services
+            services.AddAuthentication();
+            services.AddOptions();
+            services.Configure<AppOptions>(Configuration);
 
-            var sqlConnectionString = "server=localhost;userid=adnan;password=adnan;database=sample-db;";
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseMySQL(sqlConnectionString);
-                // Register the entity sets needed by OpenIddict.
+                options.UseMySQL(Configuration.Get<AppOptions>().ConnectionStrings.MySqlProvider);
                 options.UseOpenIddict();
             });
             services.AddScoped(typeof(IRepository), typeof(EFRepository<ApplicationDbContext>));
-            // services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase());
 
             services.AddMvcCore(config =>
                 {
@@ -61,33 +61,20 @@ namespace SampleApi
                 .AddDefaultTokenProviders();
 
             services.AddOpenIddict()
-    // Register the Entity Framework stores.
-    .AddEntityFrameworkCoreStores<ApplicationDbContext>()
+                .AddEntityFrameworkCoreStores<ApplicationDbContext>()
+                .AddMvcBinders()
+                .EnableTokenEndpoint("/connect/token")
+                .AllowPasswordFlow()
+                .AllowRefreshTokenFlow()
+                .UseJsonWebTokens()
+                // You can disable the HTTPS requirement during development.
+                .DisableHttpsRequirement()
+                // Register a new ephemeral key, that is discarded when the application
+                // shuts down. Tokens signed using this key are automatically invalidated.
+                // To be used during development
+                .AddEphemeralSigningKey();
 
-    // Register the ASP.NET Core MVC binder used by OpenIddict.
-    // Note: if you don't call this method, you won't be able to
-    // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
-    .AddMvcBinders()
-
-    // Enable the token endpoint (required to use the password flow).
-    .EnableTokenEndpoint("/connect/token")
-
-    // Allow client applications to use the grant_type=password flow.
-    .AllowPasswordFlow()
-
-     .AllowRefreshTokenFlow()
-
-    // During development, you can disable the HTTPS requirement.
-    .DisableHttpsRequirement()
-
-    .UseJsonWebTokens()
-
-    // Register a new ephemeral key, that is discarded when the application
-    // shuts down. Tokens signed using this key are automatically invalidated.
-    // This method should only be used during development.
-    .AddEphemeralSigningKey();
-
-            services.AddAuthentication();
+            
             // Add application services.
         }
 
@@ -102,34 +89,26 @@ namespace SampleApi
             }
             var secretKey = "mysupersecret_secretkey!123";
             var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                // The signing key must match!
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = signingKey,
-
-                // Validate the JWT Issuer (iss) claim
-                //ValidateIssuer = true,
-                //ValidIssuer = "ExampleIssuer",
-
-                // Validate the JWT Audience (aud) claim
-                ValidateAudience = false,
-                ValidAudience = "http://localhost:5000/",
-
-                // Validate the token expiry
-                ValidateLifetime = true,
-
-                // If you want to allow a certain amount of clock drift, set that here:
-                //ClockSkew = TimeSpan.Zero
-            };
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true,
                 RequireHttpsMetadata = false,
-                TokenValidationParameters = tokenValidationParameters,
-                Audience = "http://localhost:5000/",
-                Authority = "http://localhost:5000/"
+                TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = signingKey,
+
+                    ValidateIssuer = true,
+                    ValidIssuer = "http://localhost:5000",
+
+                    ValidateAudience = false,
+                    ValidAudience = "http://localhost:5000",
+
+                    ValidateLifetime = true,
+                },
+                Audience = "http://localhost:5000",
+                Authority = "http://localhost:5000"
             });
 
             app.UseOpenIddict();
