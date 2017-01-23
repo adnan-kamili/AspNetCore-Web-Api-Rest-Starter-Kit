@@ -4,6 +4,7 @@ namespace SampleApi.Options
     {
         public Application Application { get; set; }
         public ConnectionStrings ConnectionStrings { get; set; }
+        public Jwt Jwt { get; set; }
     }
     public class Application
     {
@@ -13,5 +14,10 @@ namespace SampleApi.Options
     public class ConnectionStrings
     {
         public string MySqlProvider { get; set; }
+    }
+    public class Jwt
+    {
+        public string Audience { get; set; }
+        public string Authority { get; set; }
     }
 }

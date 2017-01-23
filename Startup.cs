@@ -74,7 +74,7 @@ namespace SampleApi
                 // To be used during development
                 .AddEphemeralSigningKey();
 
-            
+
             // Add application services.
         }
 
@@ -93,22 +93,22 @@ namespace SampleApi
             {
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true,
-                RequireHttpsMetadata = false,
+                RequireHttpsMetadata = env.IsProduction(),
+                Audience = Configuration.Get<AppOptions>().Jwt.Audience,
+                Authority = Configuration.Get<AppOptions>().Jwt.Authority,
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = signingKey,
 
                     ValidateIssuer = true,
-                    ValidIssuer = "http://localhost:5000",
+                    //ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
 
-                    ValidateAudience = false,
-                    ValidAudience = "http://localhost:5000",
+                    ValidateAudience = true,
+                    ValidAudience = Configuration.Get<AppOptions>().Jwt.Audience,
 
                     ValidateLifetime = true,
-                },
-                Audience = "http://localhost:5000",
-                Authority = "http://localhost:5000"
+                }
             });
 
             app.UseOpenIddict();

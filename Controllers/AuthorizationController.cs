@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.Authentication;
+using Microsoft.Extensions.Options;
 
 using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
@@ -13,6 +14,7 @@ using AspNet.Security.OpenIdConnect.Server;
 using OpenIddict.Core;
 using OpenIddict.Models;
 using SampleApi.Models;
+using SampleApi.Options;
 
 namespace SampleApi.Controllers
 {
@@ -21,19 +23,22 @@ namespace SampleApi.Controllers
         private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly AppOptions _appOptions;
 
         public AuthorizationController(
             OpenIddictApplicationManager<OpenIddictApplication> applicationManager,
             SignInManager<ApplicationUser> signInManager,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IOptions<AppOptions> appOptions)
         {
             _applicationManager = applicationManager;
             _signInManager = signInManager;
             _userManager = userManager;
+            _appOptions = appOptions.Value;
         }
         [AllowAnonymous]
         [HttpPost("~/connect/token")]
-        public async Task<IActionResult> Exchange(OpenIdConnectRequest request)
+        public async Task<IActionResult> Token(OpenIdConnectRequest request)
         {
             if (request.IsPasswordGrantType())
             {
@@ -133,6 +138,8 @@ namespace SampleApi.Controllers
             var ticket = new AuthenticationTicket(
                 principal, new AuthenticationProperties(),
                 OpenIdConnectServerDefaults.AuthenticationScheme);
+
+            ticket.SetResources(_appOptions.Jwt.Audience);
 
             // Set the list of scopes granted to the client application.
             // Note: the offline_access scope must be granted
