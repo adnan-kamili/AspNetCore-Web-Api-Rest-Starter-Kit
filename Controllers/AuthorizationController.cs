@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -117,26 +118,25 @@ namespace SampleApi.Controllers
 
         private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, ApplicationUser user)
         {
-            // Create a new ClaimsPrincipal containing the claims that
-            // will be used to create an id_token, a token or a code.
-            var principal = await _signInManager.CreateUserPrincipalAsync(user);
-
-            // Note: by default, claims are NOT automatically included in the access and identity tokens.
-            // To allow OpenIddict to serialize them, you must attach them a destination, that specifies
-            // whether they should be included in access tokens, in identity tokens or in both.
-
-            foreach (var claim in principal.Claims)
+            var identity = new ClaimsIdentity(OpenIdConnectServerDefaults.AuthenticationScheme);
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var role in roles)
             {
-                // In this sample, every claim is serialized in both the access and the identity tokens.
-                // In a real world application, you'd probably want to exclude confidential claims
-                // or apply a claims policy based on the scopes requested by the client application.
-                claim.SetDestinations(OpenIdConnectConstants.Destinations.AccessToken,
-                                      OpenIdConnectConstants.Destinations.IdentityToken);
+                identity.AddClaim(ClaimTypes.Role, role,
+                    OpenIdConnectConstants.Destinations.AccessToken,
+                    OpenIdConnectConstants.Destinations.IdentityToken);
             }
 
+            identity.AddClaim(ClaimTypes.NameIdentifier, user.Id,
+                OpenIdConnectConstants.Destinations.AccessToken,
+                OpenIdConnectConstants.Destinations.IdentityToken);
+
+            identity.AddClaim(ClaimTypes.Name, user.Email,
+                OpenIdConnectConstants.Destinations.AccessToken,
+                OpenIdConnectConstants.Destinations.IdentityToken);
             // Create a new authentication ticket holding the user identity.
             var ticket = new AuthenticationTicket(
-                principal, new AuthenticationProperties(),
+                new ClaimsPrincipal(identity), new AuthenticationProperties(),
                 OpenIdConnectServerDefaults.AuthenticationScheme);
 
             ticket.SetResources(_appOptions.Jwt.Audience);
