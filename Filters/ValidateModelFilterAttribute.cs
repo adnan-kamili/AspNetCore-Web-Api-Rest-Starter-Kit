@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SampleApi.Filters
 {
-    public class ValidateModelFilterAttribute : ActionFilterAttribute
+    public class ValidateModelFilter : ActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {

@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 
 using SampleApi.Models;
 
@@ -14,10 +16,20 @@ namespace SampleApi.Repository
     public class EFRepository<TContext> : IRepository where TContext : DbContext
     {
         protected readonly TContext context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public EFRepository(TContext context)
+        public EFRepository(
+            TContext context,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            SignInManager<ApplicationUser> signInManager)
         {
             this.context = context;
+            this._userManager = userManager;
+            this._roleManager = roleManager;
+            this._signInManager = signInManager;
         }
 
         protected virtual IQueryable<TEntity> GetQueryable<TEntity>(
@@ -178,14 +190,14 @@ namespace SampleApi.Repository
             dbSet.Remove(entity);
         }
 
-        public virtual void Save()
-        {
-            context.SaveChanges();
-        }
-
         public virtual Task SaveAsync()
         {
             return context.SaveChangesAsync();
+        }
+
+        public virtual void Save()
+        {
+            context.SaveChanges();
         }
 
         public virtual bool Any<TEntity>() where TEntity : class, IEntity
@@ -196,6 +208,21 @@ namespace SampleApi.Repository
         public virtual void EnsureDatabaseCreated()
         {
             context.Database.EnsureCreated();
+        }
+
+        public UserManager<ApplicationUser> GetUserManager()
+        {
+            return  _userManager;
+        }
+
+        public SignInManager<ApplicationUser> GetSignInManager()
+        {
+            return  _signInManager;
+        }
+
+        public RoleManager<IdentityRole> GetRoleManager()
+        {
+            return  _roleManager;
         }
     }
 }

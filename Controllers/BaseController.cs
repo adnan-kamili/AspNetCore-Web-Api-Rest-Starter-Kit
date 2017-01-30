@@ -1,16 +1,16 @@
 using System.Collections.Generic;
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SampleApi.Filters;
 using System.Threading.Tasks;
 using SampleApi.Repository;
 using SampleApi.Models;
+using SampleApi.Policies;
+
 
 namespace SampleApi.Controllers
 {
     [Route("api/v1/[controller]")]
-    [TypeFilter(typeof(CustomExceptionFilterAttribute))]
-    [ValidateModelFilter]
     public abstract class BaseController<TEntity> : Controller where TEntity : Entity<int>
     {
         protected readonly IRepository repository;
@@ -30,6 +30,7 @@ namespace SampleApi.Controllers
 
         [PaginationHeadersFilter]
         [HttpGet]
+        [Authorize(Policy = Permissions.ReadItem)]
         public virtual async Task<IActionResult> GetList([FromQuery] int page = FirstPage, [FromQuery] int limit = MinLimit)
         {
             page = (page < FirstPage) ? FirstPage : page;
@@ -45,6 +46,7 @@ namespace SampleApi.Controllers
         }
 
         [HttpGet("{id}")]
+        //[Authorize(Policy = "CreateItem")]
         public virtual async Task<IActionResult> Get([FromRoute] int id)
         {
             TEntity entity = await repository.GetByIdAsync<TEntity>(id);

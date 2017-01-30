@@ -13,6 +13,9 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using SampleApi.Models;
 using SampleApi.Repository;
 using SampleApi.Options;
+using SampleApi.Filters;
+using SampleApi.Policies;
+using System.Reflection;
 
 namespace SampleApi
 {
@@ -44,17 +47,32 @@ namespace SampleApi
             });
             services.AddScoped(typeof(IRepository), typeof(EFRepository<ApplicationDbContext>));
 
-            services.AddMvcCore(config =>
+            services.AddAuthorization(options =>
+            {
+                Type type = typeof(Permissions);
+                foreach (var permission in type.GetFields())
+                {
+                    var permissionValue = permission.GetValue(null).ToString();
+                    options.AddPolicy(permissionValue, policy => policy.Requirements.Add(new PermissionRequirement(permissionValue)));
+                }
+            });
+            services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+
+            services.AddMvcCore(
+                options =>
                 {
                     var policy = new AuthorizationPolicyBuilder()
                                     .RequireAuthenticatedUser()
                                     .Build();
-                    config.Filters.Add(new AuthorizeFilter(policy));
-                })
-                .AddJsonFormatters()
-                .AddAuthorization()
-                .AddDataAnnotations()
-                .AddCors();
+                    options.Filters.Add(new AuthorizeFilter(policy));
+                    options.Filters.Add(typeof(CustomExceptionFilter));
+                    options.Filters.Add(new ValidateModelFilter());
+                }
+               )
+               .AddJsonFormatters()
+               .AddAuthorization()
+               .AddDataAnnotations()
+               .AddCors();
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

@@ -1,43 +1,30 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.Threading.Tasks;
 using SampleApi.Repository;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using SampleApi.Models;
 using SampleApi.ViewModels;
-using SampleApi.Filters;
 
 
 namespace SampleApi.Controllers
 {
     [Route("api/v1/[controller]")]
-    [TypeFilter(typeof(CustomExceptionFilterAttribute))]
-    [ValidateModelFilter]
     public class AccountsController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IRepository _repository;
-        public AccountsController(
-            IRepository repository,
-            UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+        public AccountsController(IRepository repository)
         {
             this._repository = repository;
-            this._userManager = userManager;
-            this._roleManager = roleManager;
         }
 
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RegisterViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null)
+            if (await _repository.GetUserManager().FindByEmailAsync(model.Email) != null)
             {
                 ModelState.AddModelError("Email", "Email is already in use");
                 var modelErrors = new Dictionary<string, Object>();
@@ -52,20 +39,19 @@ namespace SampleApi.Controllers
             };
             _repository.Create(account);
             await _repository.SaveAsync();
-            var adminRole = await _roleManager.FindByNameAsync("admin");
-            if (adminRole == null)
+            var adminRole = new IdentityRole("admin");
+            if (! await _repository.GetRoleManager().RoleExistsAsync(adminRole.Name))
             {
-                adminRole = new IdentityRole("admin");
-                await _roleManager.CreateAsync(adminRole);
+                await _repository.GetRoleManager().CreateAsync(adminRole);
             }
-            var newUser = new ApplicationUser
+            var user = new ApplicationUser
             {
                 UserName = model.Email,
                 Email = model.Email,
                 Name = model.Name,
                 AccountId = account.Id
             };
-            var userCreationResult = await _userManager.CreateAsync(newUser, model.Password);
+            var userCreationResult = await _repository.GetUserManager().CreateAsync(user, model.Password);
             if (!userCreationResult.Succeeded)
             {
                 foreach (var error in userCreationResult.Errors)
@@ -75,7 +61,7 @@ namespace SampleApi.Controllers
 
                 return BadRequest(ModelState);
             }
-            await _userManager.AddToRoleAsync(newUser, adminRole.Name);
+            await _repository.GetUserManager().AddToRoleAsync(user, "admin");
             return Created($"/api/v1/accounts/{account.Id}", new { message = "Account was created successfully!" });
         }
     }

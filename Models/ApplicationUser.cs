@@ -4,8 +4,14 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace SampleApi.Models
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser, IEntity<string>
     {
+        object IEntity.Id
+        {
+            get { return this.Id; }
+            set { this.Id = value.ToString(); }
+        }
+
         [Required]
         public string Name { get; set; }
 

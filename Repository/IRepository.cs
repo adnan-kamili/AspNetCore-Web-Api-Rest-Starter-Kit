@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using SampleApi.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace SampleApi.Repository
 {
@@ -74,5 +76,11 @@ namespace SampleApi.Repository
         bool Any<TEntity>() where TEntity : class, IEntity;
 
         void EnsureDatabaseCreated();
+
+        UserManager<ApplicationUser> GetUserManager();
+
+        SignInManager<ApplicationUser> GetSignInManager();
+
+        RoleManager<IdentityRole> GetRoleManager();
     }
 }
