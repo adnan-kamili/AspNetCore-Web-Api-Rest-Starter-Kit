@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace SampleApi.Filters
 {
-    public class CustomExceptionFilter : ExceptionFilterAttribute
+    public class CustomExceptionFilterAttribute : ExceptionFilterAttribute
     {
         private readonly IHostingEnvironment _hostingEnvironment;
 
-        public CustomExceptionFilter(IHostingEnvironment hostingEnvironment)
+        public CustomExceptionFilterAttribute(IHostingEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
         }

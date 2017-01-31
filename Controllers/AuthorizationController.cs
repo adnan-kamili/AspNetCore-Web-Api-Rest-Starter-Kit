@@ -157,7 +157,6 @@ namespace SampleApi.Controllers
                 OpenIdConnectConstants.Scopes.OfflineAccess,
                 OpenIddictConstants.Scopes.Roles
             }.Intersect(request.GetScopes()).ToList();
-            System.Console.WriteLine(string.Join<Claim>(",", permissionClaims.ToArray()));
             // Add permission claims to scope
             foreach (var claim in permissionClaims)
             {

@@ -10,12 +10,6 @@ namespace SampleApi.Repository
             : base(options)
         { }
         public DbSet<Item> Items { get; set; }
-        public DbSet<Book> Books { get; set; }
         public DbSet<Account> Account { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-        }
     }
 }

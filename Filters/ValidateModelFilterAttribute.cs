@@ -1,34 +1,19 @@
 using System;
 using System.Linq;
-using System.Reflection;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Filters;
-using System.ComponentModel.DataAnnotations;
 
 namespace SampleApi.Filters
 {
-    public class ValidateModelFilter : ActionFilterAttribute
+    public class ValidateModelFilterAttribute : ActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
 
             if (!context.ModelState.IsValid && context.HttpContext.Request.Method == "PATCH")
             {
-                foreach (var model in context.ModelState)
-                {
-                    //string[] parameterParts = parameter.Split('.');
-                    //string argumentName = parameterParts[0];
-                    //string propertyName = parameterParts[0];
-                    Console.WriteLine(model.Value.Errors.ToString());
-                    //Console.WriteLine(propertyName);
-                    // var argument = context.ActionArguments[argumentName];
-                    // var property = argument.GetType().GetProperty(propertyName);
-                    // if (property.IsDefined(typeof(RequiredAttribute), true))
-                    // {
-                    //    Console.WriteLine(property);
-                    // }
-                }
+                // improve code to remove check on hard coded string - "required"
                 var modelStateErrors = context.ModelState.Where(model =>
                 {
                     // ignore only if required error is present

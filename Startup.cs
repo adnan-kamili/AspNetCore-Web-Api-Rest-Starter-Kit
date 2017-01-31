@@ -1,21 +1,23 @@
 using System;
 using System.Text;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MySQL.Data.Entity.Extensions;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 using SampleApi.Models;
 using SampleApi.Repository;
 using SampleApi.Options;
 using SampleApi.Filters;
 using SampleApi.Policies;
-using System.Reflection;
+
 
 namespace SampleApi
 {
@@ -65,8 +67,8 @@ namespace SampleApi
                                     .RequireAuthenticatedUser()
                                     .Build();
                     options.Filters.Add(new AuthorizeFilter(policy));
-                    options.Filters.Add(typeof(CustomExceptionFilter));
-                    options.Filters.Add(new ValidateModelFilter());
+                    options.Filters.Add(typeof(CustomExceptionFilterAttribute));
+                    options.Filters.Add(new ValidateModelFilterAttribute());
                 }
                )
                .AddJsonFormatters()
@@ -85,7 +87,7 @@ namespace SampleApi
                 .AllowPasswordFlow()
                 .AllowRefreshTokenFlow()
                 .UseJsonWebTokens()
-                // You can disable the HTTPS requirement during development.
+                // You can disable the HTTPS requirement during development or behind a reverse proxy
                 .DisableHttpsRequirement()
                 // Register a new ephemeral key, that is discarded when the application
                 // shuts down. Tokens signed using this key are automatically invalidated.
@@ -105,8 +107,7 @@ namespace SampleApi
             {
                 app.UseDeveloperExceptionPage();
             }
-            var secretKey = "mysupersecret_secretkey!123";
-            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
+            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
                 AutomaticAuthenticate = true,
@@ -117,7 +118,7 @@ namespace SampleApi
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = signingKey,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
 
                     ValidateIssuer = true,
                     //ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
