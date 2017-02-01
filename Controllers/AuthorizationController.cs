@@ -106,6 +106,34 @@ namespace SampleApi.Controllers
 
                 return SignIn(ticket.Principal, ticket.Properties, ticket.AuthenticationScheme);
             }
+            else if (request.IsRefreshTokenGrantType()) {
+                // Retrieve the claims principal stored in the refresh token.
+                var info = await HttpContext.Authentication.GetAuthenticateInfoAsync(
+                    OpenIdConnectServerDefaults.AuthenticationScheme);
+
+                // Retrieve the user profile corresponding to the refresh token.
+                var user = await _repository.GetUserManager().GetUserAsync(info.Principal);
+                if (user == null) {
+                    return BadRequest(new OpenIdConnectResponse {
+                        Error = OpenIdConnectConstants.Errors.InvalidGrant,
+                        ErrorDescription = "The refresh token is no longer valid."
+                    });
+                }
+
+                // Ensure the user is still allowed to sign in.
+                if (!await _repository.GetSignInManager().CanSignInAsync(user)) {
+                    return BadRequest(new OpenIdConnectResponse {
+                        Error = OpenIdConnectConstants.Errors.InvalidGrant,
+                        ErrorDescription = "The user is no longer allowed to sign in."
+                    });
+                }
+
+                // Create a new authentication ticket, but reuse the properties stored
+                // in the refresh token, including the scopes originally granted.
+                var ticket = await CreateTicketAsync(request, user, info.Properties);
+
+                return SignIn(ticket.Principal, ticket.Properties, ticket.AuthenticationScheme);
+            }
 
             return BadRequest(new OpenIdConnectResponse
             {
@@ -114,7 +142,7 @@ namespace SampleApi.Controllers
             });
         }
 
-        private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, ApplicationUser user)
+        private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, ApplicationUser user,  AuthenticationProperties properties = null)
         {
             var identity = new ClaimsIdentity(OpenIdConnectServerDefaults.AuthenticationScheme);
             var roles = await _repository.GetUserManager().GetRolesAsync(user);
@@ -143,7 +171,7 @@ namespace SampleApi.Controllers
 
             // Create a new authentication ticket holding the user identity.
             var ticket = new AuthenticationTicket(
-                new ClaimsPrincipal(identity), new AuthenticationProperties(),
+                new ClaimsPrincipal(identity), null,
                 OpenIdConnectServerDefaults.AuthenticationScheme);
 
             // Set the list of scopes granted to the client application.

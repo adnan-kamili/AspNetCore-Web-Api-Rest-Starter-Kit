@@ -37,11 +37,11 @@ namespace SampleApi
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services
-            services.AddAuthentication();
+            // Add options
             services.AddOptions();
             services.Configure<AppOptions>(Configuration);
 
+            // Add database Context
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseMySQL(Configuration.Get<AppOptions>().ConnectionStrings.MySqlProvider);
@@ -49,8 +49,15 @@ namespace SampleApi
             });
             services.AddScoped(typeof(IRepository), typeof(EFRepository<ApplicationDbContext>));
 
+            // Add identity
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            // Add authorization policies
             services.AddAuthorization(options =>
             {
+                // Create a policy for each permission
                 Type type = typeof(Permissions);
                 foreach (var permission in type.GetFields())
                 {
@@ -60,14 +67,20 @@ namespace SampleApi
             });
             services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 
+            // Add MVC Core
             services.AddMvcCore(
                 options =>
                 {
+                    // Add global authorization filter 
                     var policy = new AuthorizationPolicyBuilder()
                                     .RequireAuthenticatedUser()
                                     .Build();
                     options.Filters.Add(new AuthorizeFilter(policy));
+
+                    // Add global exception handler for production
                     options.Filters.Add(typeof(CustomExceptionFilterAttribute));
+
+                    // Add global validation filter
                     options.Filters.Add(new ValidateModelFilterAttribute());
                 }
                )
@@ -76,10 +89,10 @@ namespace SampleApi
                .AddDataAnnotations()
                .AddCors();
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            
 
+            // Add authentication
+            services.AddAuthentication();
             services.AddOpenIddict()
                 .AddEntityFrameworkCoreStores<ApplicationDbContext>()
                 .AddMvcBinders()
@@ -87,15 +100,12 @@ namespace SampleApi
                 .AllowPasswordFlow()
                 .AllowRefreshTokenFlow()
                 .UseJsonWebTokens()
-                // You can disable the HTTPS requirement during development or behind a reverse proxy
+                // You can disable the HTTPS requirement during development or if behind a reverse proxy
                 .DisableHttpsRequirement()
                 // Register a new ephemeral key, that is discarded when the application
                 // shuts down. Tokens signed using this key are automatically invalidated.
                 // To be used during development
                 .AddEphemeralSigningKey();
-
-
-            // Add application services.
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -107,6 +117,8 @@ namespace SampleApi
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            // Add Jwt middleware for authentication
             var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
@@ -130,8 +142,13 @@ namespace SampleApi
                 }
             });
 
+            // Add OpedId Connect middleware
             app.UseOpenIddict();
+
+            // Add Mvc middleware
             app.UseMvc();
+
+            // Database intializer
             DbInitializer.Initialize(repository);
         }
     }
