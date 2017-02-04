@@ -11,12 +11,13 @@ namespace SampleApi.Repository
 {
     public interface IRepository
     {
-         IEnumerable<TEntity> GetAll<TEntity>(
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-        string includeProperties = null,
-        int? skip = null,
-        int? limit = null)
-        where TEntity : class, IEntity;
+        object TenantId { get; set; }
+        IEnumerable<TEntity> GetAll<TEntity>(
+       Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+       string includeProperties = null,
+       int? skip = null,
+       int? limit = null)
+       where TEntity : class, IEntity;
 
         Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,

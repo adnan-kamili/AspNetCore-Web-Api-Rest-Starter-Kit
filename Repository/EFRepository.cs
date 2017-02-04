@@ -15,6 +15,7 @@ namespace SampleApi.Repository
 {
     public class EFRepository<TContext> : IRepository where TContext : DbContext
     {
+        public object TenantId { get; set; }
         protected readonly TContext context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -42,7 +43,10 @@ namespace SampleApi.Repository
         {
             includeProperties = includeProperties ?? string.Empty;
             IQueryable<TEntity> query = context.Set<TEntity>();
-
+            if (typeof(ITenantEntity).GetTypeInfo().IsAssignableFrom(typeof(TEntity).Ge‌​tTypeInfo()))
+            {
+                query = query.Where(entity => ((ITenantEntity)entity).TenantId == TenantId);
+            }
             if (filter != null)
             {
                 query = query.Where(filter);
@@ -132,12 +136,31 @@ namespace SampleApi.Repository
         public virtual TEntity GetById<TEntity>(object id)
             where TEntity : class, IEntity
         {
-            return context.Set<TEntity>().Find(id);
+            object[] param = new object[2];
+            param[0] = id;
+            if (typeof(ITenantEntity).GetTypeInfo().IsAssignableFrom(typeof(TEntity).Ge‌​tTypeInfo()))
+            {
+                param[1] = new
+                {
+                    TenantId = TenantId
+                };
+            }
+
+            return context.Set<TEntity>().Find(param);
         }
 
         public virtual Task<TEntity> GetByIdAsync<TEntity>(object id) where TEntity : class, IEntity
         {
-            return context.Set<TEntity>().FindAsync(id);
+            object[] param = new object[2];
+            param[0] = id;
+            if (typeof(ITenantEntity).GetTypeInfo().IsAssignableFrom(typeof(TEntity).Ge‌​tTypeInfo()))
+            {
+                param[1] = new
+                {
+                    TenantId = TenantId
+                };
+            }
+            return context.Set<TEntity>().FindAsync(param);
         }
 
         public virtual int GetCount<TEntity>(Expression<Func<TEntity, bool>> filter = null) where TEntity : class, IEntity
@@ -159,14 +182,23 @@ namespace SampleApi.Repository
         {
             return GetQueryable<TEntity>(filter).AnyAsync();
         }
-        public virtual void Create<TEntity>(TEntity entity) where TEntity : class, IEntity
+        public virtual void Create<TEntity>(TEntity entity) where TEntity :  class, IEntity
         {
             entity.CreatedAt = DateTime.UtcNow;
+
+            if (entity is ITenantEntity)
+            {
+                ((ITenantEntity)entity).TenantId = TenantId;
+            }
+            
             context.Set<TEntity>().Add(entity);
         }
-
         public virtual void Update<TEntity>(TEntity entity, TEntity updatedEntity) where TEntity : class, IEntity
         {
+            if (updatedEntity is ITenantEntity)
+            {
+                ((ITenantEntity)entity).TenantId = TenantId;
+            }
             updatedEntity.Id = entity.Id;
             PropertyInfo[] properties = entity.GetType().GetProperties();
             foreach (PropertyInfo propertyInfo in properties)
@@ -212,17 +244,17 @@ namespace SampleApi.Repository
 
         public UserManager<ApplicationUser> GetUserManager()
         {
-            return  _userManager;
+            return _userManager;
         }
 
         public SignInManager<ApplicationUser> GetSignInManager()
         {
-            return  _signInManager;
+            return _signInManager;
         }
 
         public RoleManager<IdentityRole> GetRoleManager()
         {
-            return  _roleManager;
+            return _roleManager;
         }
     }
 }

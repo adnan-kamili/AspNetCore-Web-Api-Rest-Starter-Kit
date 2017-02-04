@@ -158,13 +158,13 @@ namespace SampleApi.Controllers
                 permissionClaims.AddRange(await _repository.GetRoleManager().GetClaimsAsync(new IdentityRole(role)));
             }
             // Get all the permission claims of the user if any
-            // add check for permission claim
-            permissionClaims.AddRange(await _repository.GetUserManager().GetClaimsAsync(user));
+
+            // add check for permission claim - not needed access claims through roles only
+            // permissionClaims.AddRange(await _repository.GetUserManager().GetClaimsAsync(user));
 
             identity.AddClaim(ClaimTypes.NameIdentifier, user.Id,
                 OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
-
             identity.AddClaim(ClaimTypes.Name, user.Email,
                 OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);

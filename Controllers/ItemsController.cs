@@ -20,12 +20,12 @@ namespace SampleApi.Controllers
 
         [PaginationHeadersFilter]
         [HttpGet]
-        [Authorize(Policy = Permissions.ReadItem)]
-        public async Task<IActionResult> GetList([FromQuery] int page = FirstPage, [FromQuery] int limit = MinLimit)
+        [Authorize(Policy = PermissionClaims.ReadItem)]
+        public async Task<IActionResult> GetList([FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
         {
-            page = (page < FirstPage) ? FirstPage : page;
-            limit = (limit < MinLimit) ? MinLimit : limit;
-            limit = (limit > MaxLimit) ? MaxLimit : limit;
+            page = (page < firstPage) ? firstPage : page;
+            limit = (limit < minLimit) ? minLimit : limit;
+            limit = (limit > maxLimit) ? maxLimit : limit;
             int skip = (page - 1) * limit;
             int count = await repository.GetCountAsync<Item>(null);
             HttpContext.Items["count"] = count.ToString();
@@ -36,7 +36,7 @@ namespace SampleApi.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Policy = Permissions.ReadItem)]
+        [Authorize(Policy = PermissionClaims.ReadItem)]
         public async Task<IActionResult> Get([FromRoute] int id)
         {
             Item entity = await repository.GetByIdAsync<Item>(id);
@@ -48,7 +48,7 @@ namespace SampleApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = Permissions.CreateItem)]
+        [Authorize(Policy = PermissionClaims.CreateItem)]
         public async Task<IActionResult> Create([FromBody] Item entity)
         {
             repository.Create(entity);
@@ -57,7 +57,7 @@ namespace SampleApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        [Authorize(Policy = Permissions.UpdateItem)]
+        [Authorize(Policy = PermissionClaims.UpdateItem)]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] Item updatedEntity)
         {
             Item entity = repository.GetById<Item>(id);
@@ -71,7 +71,7 @@ namespace SampleApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = Permissions.DeleteItem)]
+        [Authorize(Policy = PermissionClaims.DeleteItem)]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             Item entity = repository.GetById<Item>(id);

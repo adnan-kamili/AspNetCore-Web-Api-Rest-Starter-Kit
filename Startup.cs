@@ -58,10 +58,10 @@ namespace SampleApi
             services.AddAuthorization(options =>
             {
                 // Create a policy for each permission
-                Type type = typeof(Permissions);
-                foreach (var permission in type.GetFields())
+                Type type = typeof(PermissionClaims);
+                foreach (var permissionClaim in type.GetFields())
                 {
-                    var permissionValue = permission.GetValue(null).ToString();
+                    var permissionValue = permissionClaim.GetValue(null).ToString();
                     options.AddPolicy(permissionValue, policy => policy.Requirements.Add(new PermissionRequirement(permissionValue)));
                 }
             });

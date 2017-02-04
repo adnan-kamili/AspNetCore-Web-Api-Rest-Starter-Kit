@@ -10,6 +10,6 @@ namespace SampleApi.Repository
             : base(options)
         { }
         public DbSet<Item> Items { get; set; }
-        public DbSet<Account> Account { get; set; }
+        public DbSet<Tenant> Tenants { get; set; }
     }
 }

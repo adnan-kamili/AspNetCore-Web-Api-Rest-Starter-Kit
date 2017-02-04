@@ -10,7 +10,7 @@ namespace SampleApi.Repository
         {
             repository.EnsureDatabaseCreated();
 
-            if (repository.Any<Account>())
+            if (repository.Any<Tenant>())
             {
                 return;
             }

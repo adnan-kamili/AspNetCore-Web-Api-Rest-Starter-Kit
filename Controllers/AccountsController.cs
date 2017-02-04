@@ -33,11 +33,11 @@ namespace SampleApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var account = new Account
+            var tenant = new Tenant
             {
                 Company = model.Company
             };
-            _repository.Create(account);
+            _repository.Create(tenant);
             await _repository.SaveAsync();
             var adminRole = new IdentityRole("admin");
             if (! await _repository.GetRoleManager().RoleExistsAsync(adminRole.Name))
@@ -49,7 +49,7 @@ namespace SampleApi.Controllers
                 UserName = model.Email,
                 Email = model.Email,
                 Name = model.Name,
-                AccountId = account.Id
+                TenantId = tenant.Id
             };
             var userCreationResult = await _repository.GetUserManager().CreateAsync(user, model.Password);
             if (!userCreationResult.Succeeded)
@@ -61,8 +61,8 @@ namespace SampleApi.Controllers
 
                 return BadRequest(ModelState);
             }
-            await _repository.GetUserManager().AddToRoleAsync(user, "admin");
-            return Created($"/api/v1/accounts/{account.Id}", new { message = "Account was created successfully!" });
+            await _repository.GetUserManager().AddToRoleAsync(user, adminRole.Name);
+            return Created($"/api/v1/users/{user.Id}", new { message = "User account was created successfully!" });
         }
     }
 }
