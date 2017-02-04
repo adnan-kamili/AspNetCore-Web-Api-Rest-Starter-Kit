@@ -4,13 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Filters;
 
+
 namespace SampleApi.Filters
 {
     public class ValidateModelFilterAttribute : ActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-
+            // Allow partial update
             if (!context.ModelState.IsValid && context.HttpContext.Request.Method == "PATCH")
             {
                 // improve code to remove check on hard coded string - "required"
@@ -31,13 +32,15 @@ namespace SampleApi.Filters
                 }
 
             }
-            if (!context.ModelState.IsValid)
+            // Return validation error response
+            else if (!context.ModelState.IsValid)
             {
                 var modelErrors = new Dictionary<string, Object>();
                 modelErrors["message"] = "The request has validation errors.";
                 modelErrors["errors"] = new SerializableError(context.ModelState);
                 context.Result = new BadRequestObjectResult(context.ModelState);
             }
+
         }
     }
 }

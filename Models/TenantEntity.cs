@@ -1,15 +1,7 @@
-using System;
-
 namespace SampleApi.Models
 {
-    public abstract class TenantEntity<T> : Entity<T>, ITenantEntity<T>
+    public abstract class TenantEntity<T> : Entity<T>, ITenantEntity
     {
-        public T TenantId { get; set; }
-
-        object ITenantEntity.TenantId
-        {
-            get { return this.TenantId; }
-            set { this.TenantId = (T)Convert.ChangeType(value, typeof(T)); }
-        }
+        public string TenantId { get; set; }
     }
 }

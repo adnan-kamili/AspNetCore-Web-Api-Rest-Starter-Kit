@@ -22,12 +22,6 @@ namespace SampleApi.Controllers
         public BaseController(IRepository repository)
         {
             this.repository = repository;
-            if (typeof(ITenantEntity).GetTypeInfo().IsAssignableFrom(typeof(TEntity).Ge‌​tTypeInfo()))
-            {
-                ClaimsIdentity claimsIdentity = HttpContext.User.Identity as ClaimsIdentity;
-                Claim claim = claimsIdentity?.FindFirst("tenant");
-                repository.TenantId = claim.Value;
-            }
         }
     }
 }

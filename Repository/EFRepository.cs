@@ -15,7 +15,7 @@ namespace SampleApi.Repository
 {
     public class EFRepository<TContext> : IRepository where TContext : DbContext
     {
-        public object TenantId { get; set; }
+        public string TenantId { get; set; }
         protected readonly TContext context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;

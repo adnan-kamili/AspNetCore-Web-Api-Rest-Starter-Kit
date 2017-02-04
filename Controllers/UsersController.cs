@@ -76,7 +76,7 @@ namespace SampleApi.Controllers
                 UserName = model.Email,
                 Email = model.Email,
                 Name = model.Name,
-                TenantId = 2
+                TenantId = repository.TenantId
             };
             var userCreationResult = await repository.GetUserManager().CreateAsync(user, model.Password);
             if (!userCreationResult.Succeeded)

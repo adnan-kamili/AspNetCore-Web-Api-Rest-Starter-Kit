@@ -81,7 +81,10 @@ namespace SampleApi
                     options.Filters.Add(typeof(CustomExceptionFilterAttribute));
 
                     // Add global validation filter
-                    options.Filters.Add(new ValidateModelFilterAttribute());
+                    options.Filters.Add(typeof(ValidateModelFilterAttribute));
+
+                    // Add global tenant filter
+                    options.Filters.Add(typeof(TenantFilterAttribute));
                 }
                )
                .AddJsonFormatters()

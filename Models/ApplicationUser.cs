@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace SampleApi.Models
 {
-    public class ApplicationUser : IdentityUser, IEntity<string>, ITenantEntity<int>
+    public class ApplicationUser : IdentityUser, IEntity<string>, ITenantEntity
     {
         object IEntity.Id
         {
@@ -15,13 +15,8 @@ namespace SampleApi.Models
         [Required]
         public string Name { get; set; }
 
-        object ITenantEntity.TenantId
-        {
-            get { return this.TenantId; }
-            set { this.TenantId = (int)Convert.ChangeType(value, typeof(int)); }
-        }
         [Required]
-        public int TenantId { get; set; }
+        public string TenantId { get; set; }
 
         private DateTime? createdAt;
 

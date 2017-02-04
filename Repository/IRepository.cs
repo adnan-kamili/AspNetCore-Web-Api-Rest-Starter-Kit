@@ -11,7 +11,7 @@ namespace SampleApi.Repository
 {
     public interface IRepository
     {
-        object TenantId { get; set; }
+        string TenantId { get; set; }
         IEnumerable<TEntity> GetAll<TEntity>(
        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
        string includeProperties = null,

@@ -17,6 +17,7 @@ using OpenIddict.Models;
 using SampleApi.Repository;
 using SampleApi.Options;
 using SampleApi.Models;
+using SampleApi.Policies;
 
 namespace SampleApi.Controllers
 {
@@ -168,6 +169,11 @@ namespace SampleApi.Controllers
             identity.AddClaim(ClaimTypes.Name, user.Email,
                 OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
+
+            if(user is ITenantEntity ){
+                identity.AddClaim(CustomClaimTypes.Tid, user.TenantId.ToString(),
+                OpenIdConnectConstants.Destinations.AccessToken);
+            }
 
             // Create a new authentication ticket holding the user identity.
             var ticket = new AuthenticationTicket(
