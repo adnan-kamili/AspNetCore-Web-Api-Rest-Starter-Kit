@@ -14,90 +14,87 @@ using SampleApi.ViewModels;
 namespace SampleApi.Controllers
 {
     [Route("api/v1/[controller]")]
-    public class UsersController : BaseController<ApplicationUser>
+    public class RolesController : BaseController<ApplicationRole>
     {
-        public UsersController(IRepository repository) : base(repository)
+        public RolesController(IRepository repository) : base(repository)
         {
         }
 
         [PaginationHeadersFilter]
         [HttpGet]
-        [Authorize(Policy = PermissionClaims.ReadUser)]
+        [Authorize(Policy = PermissionClaims.ReadRole)]
         public async Task<IActionResult> GetList([FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
         {
             page = (page < firstPage) ? firstPage : page;
             limit = (limit < minLimit) ? minLimit : limit;
             limit = (limit > maxLimit) ? maxLimit : limit;
             int skip = (page - 1) * limit;
-            int count = await repository.GetCountAsync<ApplicationUser>(null);
+            int count = await repository.GetCountAsync<ApplicationRole>(null);
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
-            IEnumerable<ApplicationUser> userList = await repository.GetAllAsync<ApplicationUser>(null, null, skip, limit);
-            return Json(userList);
+            IEnumerable<ApplicationRole> roleList = await repository.GetAllAsync<ApplicationRole>(null, null, skip, limit);
+            return Json(roleList);
         }
 
         [HttpGet("{id}")]
-        [Authorize(Policy = PermissionClaims.ReadUser)]
+        [Authorize(Policy = PermissionClaims.ReadRole)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id);
-            if (user != null)
+            ApplicationRole role = await repository.GetByIdAsync<ApplicationRole>(id);
+            if (role != null)
             {
-                return Json(user);
+                return Json(role);
             }
-            return NotFound(new { message = "User does not exist!" });
+            return NotFound(new { message = "Role does not exist!" });
         }
 
         [HttpPost]
-        [Authorize(Policy = PermissionClaims.CreateUser)]
-        public async Task<IActionResult> Create([FromBody] UserViewModel model)
+        [Authorize(Policy = PermissionClaims.CreateRole)]
+        public async Task<IActionResult> Create([FromBody] RoleViewModel model)
         {
-            if (await repository.GetUserManager().FindByEmailAsync(model.Email) != null)
+            if (await repository.GetRoleManager().RoleExistsAsync(model.Name + repository.TenantId))
             {
-                ModelState.AddModelError("Email", "Email is already in use");
+                ModelState.AddModelError("Role", $"Role {model.Name} already exists.");
                 var modelErrors = new Dictionary<string, Object>();
                 modelErrors["message"] = "The request has validation errors.";
                 modelErrors["errors"] = new SerializableError(ModelState);
                 return BadRequest(modelErrors);
             }
-            for (var i = 0; i < model.Roles.Count; i++)
+            foreach (var claim in model.Claims)
             {
-                bool roleExists = await repository.GetRoleManager().RoleExistsAsync(model.Roles[i] + repository.TenantId);
-                if (!roleExists || model.Roles[i] == "admin" )
+                if (!PermissionClaims.GetAll().Contains(claim))
                 {
-                    ModelState.AddModelError("Role", $"Role '{model.Roles[i]}' does not exist");
+                    ModelState.AddModelError("RoleClaim", $"RoleClaim {claim} does not exist.");
                     var modelErrors = new Dictionary<string, Object>();
                     modelErrors["message"] = "The request has validation errors.";
                     modelErrors["errors"] = new SerializableError(ModelState);
                     return BadRequest(modelErrors);
                 }
-                model.Roles[i] = model.Roles[i] + repository.TenantId;
             }
-            var user = new ApplicationUser
+            var role = new ApplicationRole(model.Name, repository.TenantId, model.Description);
+            var roleCreationResult = await repository.GetRoleManager().CreateAsync(role);
+            if (!roleCreationResult.Succeeded)
             {
-                UserName = model.Email,
-                Email = model.Email,
-                Name = model.Name,
-                TenantId = repository.TenantId
-            };
-            var userCreationResult = await repository.GetUserManager().CreateAsync(user, model.Password);
-            if (!userCreationResult.Succeeded)
-            {
-                foreach (var error in userCreationResult.Errors)
+                foreach (var error in roleCreationResult.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-
-                return BadRequest(ModelState);
+                var modelErrors = new Dictionary<string, Object>();
+                modelErrors["message"] = "The request has validation errors.";
+                modelErrors["errors"] = new SerializableError(ModelState);
+                return BadRequest(modelErrors);
             }
-            await repository.GetUserManager().AddToRolesAsync(user, model.Roles);
-            await repository.SaveAsync();
-            return Created($"/api/v1/users/{user.Id}", new { message = "User was created successfully!" });
+            foreach (var roleClaim in model.Claims)
+            {
+                await repository.GetRoleManager().AddClaimAsync(role, new Claim(CustomClaimTypes.Permission, roleClaim));
+            }
+
+            return Created($"/api/v1/roles/{role.Id}", new { message = "Role was created successfully!" });
         }
 
-        [HttpPatch("{id}")] // needs update in update, partial role updates
-        [Authorize(Policy = PermissionClaims.UpdateUser)]
+        [HttpPatch("{id}")]
+        [Authorize(Policy = PermissionClaims.UpdateRole)]
         public async Task<IActionResult> Update([FromRoute] string id, [FromBody] UserViewModel model)
         {
             ApplicationUser user = repository.GetById<ApplicationUser>(id);
@@ -150,22 +147,28 @@ namespace SampleApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = PermissionClaims.DeleteUser)]
+        [Authorize(Policy = PermissionClaims.DeleteRole)]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            ApplicationUser user = repository.GetById<ApplicationUser>(id);
-            if (user == null)
+            ApplicationRole role = repository.GetById<ApplicationRole>(id);
+            if (await repository.GetRoleManager().FindByIdAsync(id) == null)
             {
-                return NotFound(new { message = "User does not exist!" });
+                return NotFound(new { message = "Role does not exist!" });
             }
-            var adminRole = "admin" + repository.TenantId;
-            if (await repository.GetUserManager().IsInRoleAsync(user, adminRole))
+            if (role.Name == "admin")
             {
-                // admin user can't be deleted
+                // admin role can't be deleted
                 return Forbid();
             }
-            repository.Delete(user);
-            await repository.SaveAsync();
+            var roleDeleteResult = repository.GetRoleManager().DeleteAsync(role).Result;
+            if (!roleDeleteResult.Succeeded)
+            {
+                foreach (var error in roleDeleteResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
             return NoContent();
         }
     }

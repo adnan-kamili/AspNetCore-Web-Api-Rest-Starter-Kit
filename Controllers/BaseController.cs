@@ -1,9 +1,5 @@
-
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using SampleApi.Repository;
-using SampleApi.Models;
 
 
 namespace SampleApi.Controllers

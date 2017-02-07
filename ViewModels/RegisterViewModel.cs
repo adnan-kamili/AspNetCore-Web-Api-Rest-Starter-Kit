@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using SampleApi.Models;
 
 namespace SampleApi.ViewModels
 {

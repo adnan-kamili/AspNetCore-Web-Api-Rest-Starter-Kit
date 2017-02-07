@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -124,7 +123,7 @@ namespace SampleApi
                 app.UseDeveloperExceptionPage();
             }
 
-            // Add Jwt middleware for authentication
+            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
                 AutomaticAuthenticate = true,
@@ -135,10 +134,16 @@ namespace SampleApi
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
+
                     ValidateIssuer = true,
+                    // makes no difference seemingly being ignored
+                    //ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
+
                     ValidateAudience = true,
                     ValidAudience = Configuration.Get<AppOptions>().Jwt.Audience,
-                    ValidateLifetime = true
+
+                    ValidateLifetime = true,
                 }
             });
 

@@ -39,8 +39,7 @@ namespace SampleApi.Controllers
             };
             _repository.Create(tenant);
             await _repository.SaveAsync();
-            var adminRole = new ApplicationRole("admin", tenant.Id);
-            adminRole.Description = "Admin user with all the permissions";
+            var adminRole = new ApplicationRole("admin", tenant.Id, "Admin user with all the permissions");
             var roleCreationResult = await _repository.GetRoleManager().CreateAsync(adminRole);
             if (!roleCreationResult.Succeeded)
             {

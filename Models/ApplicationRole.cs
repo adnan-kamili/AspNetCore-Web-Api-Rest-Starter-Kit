@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -13,6 +15,12 @@ namespace SampleApi.Models
             : base(name+tenantId)
         {
             this.TenantId = tenantId;
+        }
+        public ApplicationRole(string name, string tenantId, string description)
+            : base(name+tenantId)
+        {
+            this.TenantId = tenantId;
+            this.Description = description;
         }
         object IEntity.Id
         {
