@@ -18,13 +18,13 @@ namespace SampleApi.Repository
         public string TenantId { get; set; }
         protected readonly TContext context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
 
         public EFRepository(
             TContext context,
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
+            RoleManager<ApplicationRole> roleManager,
             SignInManager<ApplicationUser> signInManager)
         {
             this.context = context;
@@ -252,7 +252,7 @@ namespace SampleApi.Repository
             return _signInManager;
         }
 
-        public RoleManager<IdentityRole> GetRoleManager()
+        public RoleManager<ApplicationRole> GetRoleManager()
         {
             return _roleManager;
         }

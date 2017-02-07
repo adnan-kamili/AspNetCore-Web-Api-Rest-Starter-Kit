@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SampleApi.ViewModels
@@ -10,7 +11,8 @@ namespace SampleApi.ViewModels
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
+        public string NewPassword { get; set; }
         [Required]
-        public string RoleId { get; set; }
+        public List<string> Roles { get; set; }
     }
 }

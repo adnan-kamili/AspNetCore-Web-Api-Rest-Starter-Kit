@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using SampleApi.Repository;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 using SampleApi.Models;
 using SampleApi.ViewModels;
 
@@ -39,10 +39,16 @@ namespace SampleApi.Controllers
             };
             _repository.Create(tenant);
             await _repository.SaveAsync();
-            var adminRole = new IdentityRole("admin");
-            if (! await _repository.GetRoleManager().RoleExistsAsync(adminRole.Name))
+            var adminRole = new ApplicationRole("admin", tenant.Id);
+            adminRole.Description = "Admin user with all the permissions";
+            var roleCreationResult = await _repository.GetRoleManager().CreateAsync(adminRole);
+            if (!roleCreationResult.Succeeded)
             {
-                await _repository.GetRoleManager().CreateAsync(adminRole);
+                foreach (var error in roleCreationResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
             }
             var user = new ApplicationUser
             {
@@ -58,7 +64,6 @@ namespace SampleApi.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-
                 return BadRequest(ModelState);
             }
             await _repository.GetUserManager().AddToRoleAsync(user, adminRole.Name);

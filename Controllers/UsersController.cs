@@ -2,8 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 using SampleApi.Repository;
 using SampleApi.Models;
@@ -18,7 +18,6 @@ namespace SampleApi.Controllers
     {
         public UsersController(IRepository repository) : base(repository)
         {
-
         }
 
         [PaginationHeadersFilter]
@@ -40,7 +39,7 @@ namespace SampleApi.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Policy = PermissionClaims.ReadUser)]
-        public async Task<IActionResult> Get([FromRoute] int id)
+        public async Task<IActionResult> Get([FromRoute] string id)
         {
             ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id);
             if (user != null)
@@ -60,16 +59,19 @@ namespace SampleApi.Controllers
                 var modelErrors = new Dictionary<string, Object>();
                 modelErrors["message"] = "The request has validation errors.";
                 modelErrors["errors"] = new SerializableError(ModelState);
-                return BadRequest(ModelState);
+                return BadRequest(modelErrors);
             }
-            var role = await repository.GetRoleManager().FindByIdAsync(model.RoleId);
-            if (role != null)
+            for (var i = 0; i < model.Roles.Count; i++)
             {
-                ModelState.AddModelError("Role", "Role does not exist");
-                var modelErrors = new Dictionary<string, Object>();
-                modelErrors["message"] = "The request has validation errors.";
-                modelErrors["errors"] = new SerializableError(ModelState);
-                return BadRequest(ModelState);
+                if (! await repository.GetRoleManager().RoleExistsAsync(model.Roles[i] + repository.TenantId))
+                {
+                    ModelState.AddModelError("Role", $"Role {model.Roles[i]} does not exist");
+                    var modelErrors = new Dictionary<string, Object>();
+                    modelErrors["message"] = "The request has validation errors.";
+                    modelErrors["errors"] = new SerializableError(ModelState);
+                    return BadRequest(modelErrors);
+                }
+                model.Roles[i] = model.Roles[i] + repository.TenantId;
             }
             var user = new ApplicationUser
             {
@@ -88,34 +90,78 @@ namespace SampleApi.Controllers
 
                 return BadRequest(ModelState);
             }
-            await repository.GetUserManager().AddToRoleAsync(user, "admin");
-            repository.Create(user);
+            await repository.GetUserManager().AddToRolesAsync(user, model.Roles);
             await repository.SaveAsync();
             return Created($"/api/v1/users/{user.Id}", new { message = "User was created successfully!" });
         }
 
-        [HttpPatch("{id}")]
+        [HttpPatch("{id}")] // needs update in update, partial role updates
         [Authorize(Policy = PermissionClaims.UpdateUser)]
-        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] ApplicationUser updateduser)
+        public async Task<IActionResult> Update([FromRoute] string id, [FromBody] UserViewModel model)
         {
             ApplicationUser user = repository.GetById<ApplicationUser>(id);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
             }
-            repository.Update(user, updateduser);
-            await repository.SaveAsync();
+            if (!HttpContext.User.IsInRole("admin" + repository.TenantId))
+            {
+                // only admin or current user can update current user's profile
+                if (!HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id))
+                {
+                    return Forbid();
+                }
+            }
+
+            if (!String.IsNullOrEmpty(model.Name))
+            {
+                user.Name = model.Name;
+            }
+            if (!String.IsNullOrEmpty(model.Email))
+            {
+                user.Email = model.Email;
+            }
+
+            if (!String.IsNullOrEmpty(model.Password) && !String.IsNullOrEmpty(model.NewPassword))
+            {
+                var passwordResetResult = await repository.GetUserManager().ChangePasswordAsync(user, model.Password, model.NewPassword);
+                if (!passwordResetResult.Succeeded)
+                {
+                    foreach (var error in passwordResetResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+
+                    return BadRequest(ModelState);
+                }
+            }
+            var userUpdateResult = await repository.GetUserManager().UpdateAsync(user);
+            if (!userUpdateResult.Succeeded)
+            {
+                foreach (var error in userUpdateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return BadRequest(ModelState);
+            }
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         [Authorize(Policy = PermissionClaims.DeleteUser)]
-        public async Task<IActionResult> Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] string id)
         {
             ApplicationUser user = repository.GetById<ApplicationUser>(id);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
+            }
+            var adminRole = "admin" + repository.TenantId;
+            if (await repository.GetUserManager().IsInRoleAsync(user, adminRole))
+            {
+                // admin user can't be deleted
+                return Forbid();
             }
             repository.Delete(user);
             await repository.SaveAsync();

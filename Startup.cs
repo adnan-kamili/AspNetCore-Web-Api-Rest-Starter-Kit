@@ -50,7 +50,7 @@ namespace SampleApi
             services.AddScoped(typeof(IRepository), typeof(EFRepository<ApplicationDbContext>));
 
             // Add identity
-            services.AddIdentity<ApplicationUser, IdentityRole>()
+            services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -92,10 +92,12 @@ namespace SampleApi
                .AddDataAnnotations()
                .AddCors();
 
-            
+
 
             // Add authentication
             services.AddAuthentication();
+
+            // Add OpenId Connect/OAuth2
             services.AddOpenIddict()
                 .AddEntityFrameworkCoreStores<ApplicationDbContext>()
                 .AddMvcBinders()
@@ -105,10 +107,11 @@ namespace SampleApi
                 .UseJsonWebTokens()
                 // You can disable the HTTPS requirement during development or if behind a reverse proxy
                 .DisableHttpsRequirement()
+                .AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.Get<AppOptions>().Jwt.SecretKey)));
                 // Register a new ephemeral key, that is discarded when the application
                 // shuts down. Tokens signed using this key are automatically invalidated.
                 // To be used during development
-                .AddEphemeralSigningKey();
+                //.AddEphemeralSigningKey();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -122,7 +125,6 @@ namespace SampleApi
             }
 
             // Add Jwt middleware for authentication
-            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
                 AutomaticAuthenticate = true,
@@ -133,15 +135,10 @@ namespace SampleApi
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
-
                     ValidateIssuer = true,
-                    //ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
-
                     ValidateAudience = true,
                     ValidAudience = Configuration.Get<AppOptions>().Jwt.Audience,
-
-                    ValidateLifetime = true,
+                    ValidateLifetime = true
                 }
             });
 
@@ -152,7 +149,8 @@ namespace SampleApi
             app.UseMvc();
 
             // Database intializer
-            DbInitializer.Initialize(repository);
+            repository.EnsureDatabaseCreated();
+            //DbInitializer.Initialize(repository);
         }
     }
 }

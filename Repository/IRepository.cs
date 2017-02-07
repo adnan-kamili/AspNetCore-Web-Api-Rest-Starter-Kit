@@ -82,6 +82,6 @@ namespace SampleApi.Repository
 
         SignInManager<ApplicationUser> GetSignInManager();
 
-        RoleManager<IdentityRole> GetRoleManager();
+        RoleManager<ApplicationRole> GetRoleManager();
     }
 }

@@ -152,11 +152,12 @@ namespace SampleApi.Controllers
             // Get all the roles and add them to the role claim
             foreach (var role in roles)
             {
-                identity.AddClaim(ClaimTypes.Role, role,
+                // Remove tenant id from roles to make them user friendly
+                identity.AddClaim(ClaimTypes.Role, role.Substring(0,role.Length - user.TenantId.Length),
                     OpenIdConnectConstants.Destinations.AccessToken,
                     OpenIdConnectConstants.Destinations.IdentityToken);
                 // Get all the permission claims of the role
-                permissionClaims.AddRange(await _repository.GetRoleManager().GetClaimsAsync(new IdentityRole(role)));
+                permissionClaims.AddRange(await _repository.GetRoleManager().GetClaimsAsync(new ApplicationRole(role, user.TenantId)));
             }
             // Get all the permission claims of the user if any
 
@@ -171,7 +172,7 @@ namespace SampleApi.Controllers
                 OpenIdConnectConstants.Destinations.IdentityToken);
 
             if(user is ITenantEntity ){
-                identity.AddClaim(CustomClaimTypes.Tid, user.TenantId.ToString(),
+                identity.AddClaim(CustomClaimTypes.Tid, user.TenantId,
                 OpenIdConnectConstants.Destinations.AccessToken);
             }
 
