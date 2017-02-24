@@ -17,6 +17,7 @@ namespace SampleApi.Controllers
     [Route("api/v1/[controller]")]
     public class UsersController : BaseController<ApplicationUser>
     {
+        private const string _includeProperties = "Roles";
         public UsersController(IRepository repository) : base(repository)
         {
         }
@@ -34,7 +35,7 @@ namespace SampleApi.Controllers
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
-            var userList = await repository.GetAllAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, null, null, skip, limit);
+            var userList = await repository.GetAllAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, null, _includeProperties, skip, limit);
             return Json(userList);
         }
 
