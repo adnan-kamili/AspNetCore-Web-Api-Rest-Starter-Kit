@@ -1,6 +1,8 @@
+
+
 namespace SampleApi.Models
 {
-    public abstract class TenantEntity<T> : Entity<T>, ITenantEntity
+    public abstract class BaseTenantEntity : BaseEntity, ITenantEntity
     {
         public string TenantId { get; set; }
     }

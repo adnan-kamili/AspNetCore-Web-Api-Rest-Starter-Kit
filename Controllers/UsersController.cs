@@ -5,11 +5,12 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 
-using SampleApi.Repository;
 using SampleApi.Models;
+using SampleApi.Repository;
+using SampleApi.Models.Dtos;
 using SampleApi.Policies;
 using SampleApi.Filters;
-using SampleApi.ViewModels;
+using SampleApi.Models.ViewModels;
 
 namespace SampleApi.Controllers
 {
@@ -33,7 +34,7 @@ namespace SampleApi.Controllers
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
-            IEnumerable<ApplicationUser> userList = await repository.GetAllAsync<ApplicationUser>(null, null, skip, limit);
+            var userList = await repository.GetAllAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, null, null, skip, limit);
             return Json(userList);
         }
 
@@ -41,7 +42,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadUser)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id);
+            var user = await repository.GetByIdAsync<ApplicationUser, ApplicationUserDto>(id, ApplicationUserDto.SelectProperties);
             if (user != null)
             {
                 return Json(user);
@@ -64,7 +65,7 @@ namespace SampleApi.Controllers
             for (var i = 0; i < model.Roles.Count; i++)
             {
                 bool roleExists = await repository.GetRoleManager().RoleExistsAsync(model.Roles[i] + repository.TenantId);
-                if (!roleExists || model.Roles[i] == "admin" )
+                if (!roleExists || model.Roles[i] == "admin")
                 {
                     ModelState.AddModelError("Role", $"Role '{model.Roles[i]}' does not exist");
                     var modelErrors = new Dictionary<string, Object>();
@@ -100,7 +101,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.UpdateUser)]
         public async Task<IActionResult> Update([FromRoute] string id, [FromBody] UserViewModel model)
         {
-            ApplicationUser user = repository.GetById<ApplicationUser>(id);
+            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
@@ -153,7 +154,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.DeleteUser)]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            ApplicationUser user = repository.GetById<ApplicationUser>(id);
+            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });

@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
+
 namespace SampleApi.Models
 {
-    public class ApplicationRole : IdentityRole, IEntity<string>, ITenantEntity
+    public class ApplicationRole : IdentityRole, IEntity, ITenantEntity
     {
         public ApplicationRole()
         {
@@ -21,11 +20,6 @@ namespace SampleApi.Models
         {
             this.TenantId = tenantId;
             this.Description = description;
-        }
-        object IEntity.Id
-        {
-            get { return this.Id; }
-            set { this.Id = value.ToString(); }
         }
 
         public string Description { get; set; }

@@ -1,4 +1,4 @@
-namespace SampleApi.Models
+namespace  SampleApi.Models
 {
     public interface ITenantEntity : IEntity
     {

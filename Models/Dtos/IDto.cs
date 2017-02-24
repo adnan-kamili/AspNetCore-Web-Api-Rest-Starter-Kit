@@ -1,8 +1,8 @@
 using System;
 
-namespace  SampleApi.Models
+namespace SampleApi.Models.Dtos
 {
-    public interface IEntity
+    public interface IDto
     {
         string Id { get; set; }
         DateTime CreatedAt { get; set; }

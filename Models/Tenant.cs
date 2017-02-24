@@ -1,6 +1,6 @@
 namespace SampleApi.Models
 {
-    public class Tenant : Entity<string>
+    public class Tenant : BaseEntity
     {
         public string Company { get; set; }
     }

@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 
 using SampleApi.Repository;
 using SampleApi.Models;
+using SampleApi.Models.Dtos;
 using SampleApi.Policies;
 using SampleApi.Filters;
 
@@ -31,15 +31,15 @@ namespace SampleApi.Controllers
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
-            IEnumerable<Item> entityList = await repository.GetAllAsync<Item>(null, null, skip, limit);
+            var entityList = await repository.GetAllAsync<Item, ItemDto>(ItemDto.SelectProperties, null, null, skip, limit);
             return Json(entityList);
         }
 
         [HttpGet("{id}")]
         [Authorize(Policy = PermissionClaims.ReadItem)]
-        public async Task<IActionResult> Get([FromRoute] int id)
+        public async Task<IActionResult> Get([FromRoute] string id)
         {
-            Item entity = await repository.GetByIdAsync<Item>(id);
+            var entity = await repository.GetByIdAsync<Item, ItemDto>(id,ItemDto.SelectProperties);
             if (entity != null)
             {
                 return Json(entity);
@@ -58,7 +58,7 @@ namespace SampleApi.Controllers
 
         [HttpPatch("{id}")]
         [Authorize(Policy = PermissionClaims.UpdateItem)]
-        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] Item updatedEntity)
+        public async Task<IActionResult> Update([FromRoute] string id, [FromBody] Item updatedEntity)
         {
             Item entity = repository.GetById<Item>(id);
             if (entity == null)
@@ -72,7 +72,7 @@ namespace SampleApi.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Policy = PermissionClaims.DeleteItem)]
-        public async Task<IActionResult> Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] string id)
         {
             Item entity = repository.GetById<Item>(id);
             if (entity == null)

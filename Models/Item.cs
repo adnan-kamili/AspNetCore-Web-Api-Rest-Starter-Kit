@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SampleApi.Models
 {
-    public class Item : TenantEntity<int>
+    public class Item : BaseTenantEntity
     {
         [Required]
         public string Name { get; set; }

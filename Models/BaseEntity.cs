@@ -2,19 +2,14 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+
 namespace SampleApi.Models
 {
-    public abstract class Entity<T> : IEntity<T>
+    public abstract class BaseEntity : IEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public T Id { get; set; }
-
-        object IEntity.Id
-        {
-            get { return this.Id; }
-            set { this.Id = (T)Convert.ChangeType(value, typeof(T)); }
-        }
+        public string Id { get; set; }
 
         private DateTime? createdAt;
 
