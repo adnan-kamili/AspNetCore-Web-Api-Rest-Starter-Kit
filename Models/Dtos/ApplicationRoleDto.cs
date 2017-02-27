@@ -1,8 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace SampleApi.Models.Dtos
 {
@@ -17,19 +16,9 @@ namespace SampleApi.Models.Dtos
             Id = role.Id,
             Name = role.Name.Substring(0, role.Name.Length - role.TenantId.Length),
             Description = role.Description,
-            //Claims = GetClaimsList(role.Claims),
+            Claims = role.Claims.Select(claim => claim.ClaimValue).ToList(),
             CreatedAt = role.CreatedAt,
             ModifiedAt = role.ModifiedAt
         };
-
-        private static List<string> GetClaimsList(ICollection<IdentityRoleClaim<string>> roleClaims)
-        {
-            var claims = new List<string>();
-            // foreach (var roleClaim in roleClaims)
-            // {
-            //     claims.Add(roleClaim.ClaimValue);
-            // }
-            return claims;
-        }
     }
 }

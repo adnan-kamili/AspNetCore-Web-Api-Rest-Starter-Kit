@@ -17,7 +17,7 @@ namespace SampleApi.Controllers
     [Route("api/v1/[controller]")]
     public class RolesController : BaseController<ApplicationRole>
     {
-        private const string _includeProperties = "Claims";
+        private string[] _includeProperties = { "Claims" };
         public RolesController(IRepository repository) : base(repository)
         {
         }
@@ -46,7 +46,7 @@ namespace SampleApi.Controllers
             var role = await repository.GetByIdAsync<ApplicationRole, ApplicationRoleDto>(id, ApplicationRoleDto.SelectProperties, _includeProperties);
             if (role == null)
             {
-                return NotFound(new { message = "Role with id '"+id+"' does not exist!" });
+                return NotFound(new { message = "Role with id '" + id + "' does not exist!" });
             }
             return Json(role);
         }

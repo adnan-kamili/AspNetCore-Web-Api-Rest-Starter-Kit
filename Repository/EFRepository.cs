@@ -34,12 +34,13 @@ namespace SampleApi.Repository
         protected virtual IQueryable<TEntity> GetQueryable<TEntity>(
         Expression<Func<TEntity, bool>> filter = null,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-        string includeProperties = null,
+        string[] includeProperties = null,
         int? skip = null,
         int? limit = null)
         where TEntity : class, IEntity
         {
             IQueryable<TEntity> query = context.Set<TEntity>();
+            includeProperties = includeProperties ?? new string[] { };
             if (typeof(ITenantEntity).GetTypeInfo().IsAssignableFrom(typeof(TEntity).Ge‌​tTypeInfo()))
             {
                 query = query.Where(entity => ((ITenantEntity)entity).TenantId == TenantId);
@@ -48,10 +49,10 @@ namespace SampleApi.Repository
             {
                 query = query.Where(filter);
             }
-        
-            if (includeProperties != null)
+
+            foreach (var includeProperty in includeProperties)
             {
-                query = query.Include(includeProperties);
+                query = query.Include(includeProperty);
             }
 
             if (orderBy != null)
@@ -75,7 +76,7 @@ namespace SampleApi.Repository
             Expression<Func<TEntity, TResult>> selectProperties,
        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
 
-       string includeProperties = null,
+       string[] includeProperties = null,
        int? skip = null,
        int? limit = null)
        where TEntity : class, IEntity
@@ -86,7 +87,7 @@ namespace SampleApi.Repository
         public virtual async Task<IEnumerable<TResult>> GetAllAsync<TEntity, TResult>(
             Expression<Func<TEntity, TResult>> selectProperties,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-            string includeProperties = null,
+            string[] includeProperties = null,
             int? skip = null,
             int? limit = null)
             where TEntity : class, IEntity
@@ -99,7 +100,7 @@ namespace SampleApi.Repository
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
 
-            string includeProperties = null,
+            string[] includeProperties = null,
             int? skip = null,
             int? limit = null)
             where TEntity : class, IEntity
@@ -112,7 +113,7 @@ namespace SampleApi.Repository
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
 
-            string includeProperties = null,
+            string[] includeProperties = null,
             int? skip = null,
             int? limit = null)
             where TEntity : class, IEntity
@@ -120,13 +121,13 @@ namespace SampleApi.Repository
             return await GetQueryable<TEntity>(filter, orderBy, includeProperties, skip, limit).Select(selectProperties).ToListAsync();
         }
 
-        public virtual TEntity GetById<TEntity>(string id, string includeProperties = null)
+        public virtual TEntity GetById<TEntity>(string id, string[] includeProperties = null)
             where TEntity : class, IEntity
         {
             return GetQueryable<TEntity>(e => e.Id == id, null, includeProperties).SingleOrDefault();
         }
 
-        public virtual Task<TEntity> GetByIdAsync<TEntity>(string id, string includeProperties = null)
+        public virtual Task<TEntity> GetByIdAsync<TEntity>(string id, string[] includeProperties = null)
             where TEntity : class, IEntity
         {
             return GetQueryable<TEntity>(e => e.Id == id, null, includeProperties).SingleOrDefaultAsync();
@@ -135,7 +136,7 @@ namespace SampleApi.Repository
         public virtual TResult GetById<TEntity, TResult>(
             string id,
             Expression<Func<TEntity, TResult>> selectProperties,
-            string includeProperties = null)
+            string[] includeProperties = null)
             where TEntity : class, IEntity
         {
             return GetQueryable<TEntity>(e => e.Id == id, null, includeProperties).Select(selectProperties).SingleOrDefault();
@@ -144,7 +145,7 @@ namespace SampleApi.Repository
         public virtual Task<TResult> GetByIdAsync<TEntity, TResult>(
              string id,
              Expression<Func<TEntity, TResult>> selectProperties,
-             string includeProperties = null)
+             string[] includeProperties = null)
              where TEntity : class, IEntity
         {
             return GetQueryable<TEntity>(e => e.Id == id, null, includeProperties).Select(selectProperties).SingleOrDefaultAsync();

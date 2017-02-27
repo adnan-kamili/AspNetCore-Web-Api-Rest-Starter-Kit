@@ -14,7 +14,7 @@ namespace SampleApi.Repository
         IEnumerable<TResult> GetAll<TEntity, TResult>(
        Expression<Func<TEntity, TResult>> selectProperties,
        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-       string includeProperties = null,
+       string[] includeProperties = null,
        int? skip = null,
        int? limit = null)
        where TEntity : class, IEntity;
@@ -22,7 +22,7 @@ namespace SampleApi.Repository
         Task<IEnumerable<TResult>> GetAllAsync<TEntity, TResult>(
         Expression<Func<TEntity, TResult>> selectProperties,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-        string includeProperties = null,
+        string[] includeProperties = null,
         int? skip = null,
         int? limit = null)
         where TEntity : class, IEntity;
@@ -31,7 +31,7 @@ namespace SampleApi.Repository
             Expression<Func<TEntity, TResult>> selectProperties,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-            string includeProperties = null,
+            string[] includeProperties = null,
             int? skip = null,
             int? limit = null)
             where TEntity : class, IEntity;
@@ -40,27 +40,27 @@ namespace SampleApi.Repository
             Expression<Func<TEntity, TResult>> selectProperties,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-            string includeProperties = null,
+            string[] includeProperties = null,
             int? skip = null,
             int? limit = null)
             where TEntity : class, IEntity;
 
-        TEntity GetById<TEntity>(string id, string includeProperties = null)
+        TEntity GetById<TEntity>(string id, string[] includeProperties = null)
             where TEntity : class, IEntity;
 
-        Task<TEntity> GetByIdAsync<TEntity>(string id, string includeProperties = null)
+        Task<TEntity> GetByIdAsync<TEntity>(string id, string[] includeProperties = null)
             where TEntity : class, IEntity;
 
         TResult GetById<TEntity, TResult>(
             string id,
             Expression<Func<TEntity, TResult>> selectProperties,
-            string includeProperties = null)
+            string[] includeProperties = null)
             where TEntity : class, IEntity;
 
         Task<TResult> GetByIdAsync<TEntity, TResult>(
             string id,
             Expression<Func<TEntity, TResult>> selectProperties,
-            string includeProperties = null)
+            string[] includeProperties = null)
             where TEntity : class, IEntity;
 
         int GetCount<TEntity>(Expression<Func<TEntity, bool>> filter = null) where TEntity : class, IEntity;
