@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 
@@ -58,20 +57,14 @@ namespace SampleApi.Controllers
             if (await repository.GetRoleManager().RoleExistsAsync(model.Name + repository.TenantId))
             {
                 ModelState.AddModelError("Role", $"Role {model.Name} already exists.");
-                var modelErrors = new Dictionary<string, Object>();
-                modelErrors["message"] = "The request has validation errors.";
-                modelErrors["errors"] = new SerializableError(ModelState);
-                return BadRequest(modelErrors);
+                return BadRequest(ModelState);
             }
             foreach (var claim in model.Claims)
             {
                 if (!PermissionClaims.GetAll().Contains(claim))
                 {
-                    ModelState.AddModelError("RoleClaim", $"RoleClaim {claim} does not exist.");
-                    var modelErrors = new Dictionary<string, Object>();
-                    modelErrors["message"] = "The request has validation errors.";
-                    modelErrors["errors"] = new SerializableError(ModelState);
-                    return BadRequest(modelErrors);
+                    ModelState.AddModelError("Claims", $"Claim {claim} does not exist.");
+                    return BadRequest(ModelState);
                 }
             }
             var role = new ApplicationRole(model.Name, repository.TenantId, model.Description);
@@ -82,10 +75,7 @@ namespace SampleApi.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-                var modelErrors = new Dictionary<string, Object>();
-                modelErrors["message"] = "The request has validation errors.";
-                modelErrors["errors"] = new SerializableError(ModelState);
-                return BadRequest(modelErrors);
+                return BadRequest(ModelState);
             }
             foreach (var roleClaim in model.Claims)
             {
@@ -104,6 +94,7 @@ namespace SampleApi.Controllers
             {
                 return NotFound(new { message = "Role does not exist!" });
             }
+            role.ModifiedAt = DateTime.UtcNow;
             // // use repository get to validate tenancy
             // if (await repository.GetByIdAsync<ApplicationRole, ApplicationRoleDto>(id, ApplicationRoleDto.SelectProperties) == null)
             // {

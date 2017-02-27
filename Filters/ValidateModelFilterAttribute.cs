@@ -14,18 +14,19 @@ namespace SampleApi.Filters
             // Allow partial update
             if (!context.ModelState.IsValid && context.HttpContext.Request.Method == "PATCH")
             {
-                // improve code to remove check on hard coded string - "required"
+                // get the errors which only have 'required type' error
                 var modelStateErrors = context.ModelState.Where(model =>
                 {
-                    // ignore only if required error is present
+                    // ignore only if required error is present for the property
                     if (model.Value.Errors.Count == 1)
                     {
-                        Console.WriteLine(model.Value.Errors.FirstOrDefault().Exception.ToString());
+                        // improve code to remove check on hard coded string - "required"
                         // assuming required validation error message contains word "required"
                         return model.Value.Errors.FirstOrDefault().ErrorMessage.Contains("required");
                     }
                     return false;
                 });
+                // remove 'required type' errors from the ModelState
                 foreach (var errorModel in modelStateErrors)
                 {
                     context.ModelState.Remove(errorModel.Key.ToString());
@@ -33,14 +34,13 @@ namespace SampleApi.Filters
 
             }
             // Return validation error response
-            else if (!context.ModelState.IsValid)
+            if (!context.ModelState.IsValid )
             {
                 var modelErrors = new Dictionary<string, Object>();
                 modelErrors["message"] = "The request has validation errors.";
                 modelErrors["errors"] = new SerializableError(context.ModelState);
                 context.Result = new BadRequestObjectResult(context.ModelState);
             }
-
         }
     }
 }

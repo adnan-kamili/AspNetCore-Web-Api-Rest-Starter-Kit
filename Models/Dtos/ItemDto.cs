@@ -13,7 +13,9 @@ namespace SampleApi.Models.Dtos
             Id = item.Id,
             Name = item.Name,
             Cost = item.Cost,
-            Color = item.Color
+            Color = item.Color,
+            CreatedAt = item.CreatedAt,
+            ModifiedAt = item.ModifiedAt
         };
     }
 }

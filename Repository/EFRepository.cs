@@ -182,23 +182,29 @@ namespace SampleApi.Repository
 
             context.Set<TEntity>().Add(entity);
         }
-        public virtual void Update<TEntity>(TEntity entity, TEntity updatedEntity) where TEntity : class, IEntity
+        public virtual void Update<TEntity, TModel>(TEntity entity, TModel updatedModel) where TEntity : class, IEntity
         {
-            if (updatedEntity is ITenantEntity)
+            bool modified = false;
+            // copy the value of properties from view model into entity
+            PropertyInfo[] entityProperties = entity.GetType().GetProperties();
+            foreach (PropertyInfo entityPropertyInfo in entityProperties)
             {
-                ((ITenantEntity)entity).TenantId = TenantId;
-            }
-            updatedEntity.Id = entity.Id;
-            PropertyInfo[] properties = entity.GetType().GetProperties();
-            foreach (PropertyInfo propertyInfo in properties)
-            {
-                if (propertyInfo.GetValue(updatedEntity, null) != null)
+                PropertyInfo updatedModelPropertyInfo = updatedModel.GetType().GetProperty(entityPropertyInfo.Name);
+                if (updatedModelPropertyInfo != null)
                 {
-                    propertyInfo.SetValue(entity, propertyInfo.GetValue(updatedEntity, null), null);
+                    var value = updatedModelPropertyInfo.GetValue(updatedModel, null);
+                    if (value != null)
+                    {
+                        entityPropertyInfo.SetValue(entity, value, null);
+                        modified = true;
+                    }
                 }
             }
-            entity.ModifiedAt = DateTime.UtcNow;
-            context.Entry(entity).Property(e => e.CreatedAt).IsModified = false;
+            if (modified)
+            {
+                entity.ModifiedAt = DateTime.UtcNow;
+                context.Entry(entity);
+            }
         }
 
         public virtual void Delete<TEntity>(TEntity entity) where TEntity : class, IEntity

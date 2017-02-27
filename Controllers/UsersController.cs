@@ -17,7 +17,7 @@ namespace SampleApi.Controllers
     [Route("api/v1/[controller]")]
     public class UsersController : BaseController<ApplicationUser>
     {
-        private string[] _includeProperties = { "Roles", "Claims" };
+        private string[] _includeProperties = { "Roles" };
         public UsersController(IRepository repository) : base(repository)
         {
         }
@@ -43,7 +43,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadUser)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            var user = await repository.GetByIdAsync<ApplicationUser, ApplicationUserDto>(id,ApplicationUserDto.SelectProperties, _includeProperties);
+            var user = await repository.GetByIdAsync<ApplicationUser, ApplicationUserDto>(id, ApplicationUserDto.SelectProperties, _includeProperties);
             if (user != null)
             {
                 return Json(user);
@@ -58,10 +58,7 @@ namespace SampleApi.Controllers
             if (await repository.GetUserManager().FindByEmailAsync(model.Email) != null)
             {
                 ModelState.AddModelError("Email", "Email is already in use");
-                var modelErrors = new Dictionary<string, Object>();
-                modelErrors["message"] = "The request has validation errors.";
-                modelErrors["errors"] = new SerializableError(ModelState);
-                return BadRequest(modelErrors);
+                return BadRequest(ModelState);
             }
             for (var i = 0; i < model.Roles.Count; i++)
             {
@@ -69,10 +66,7 @@ namespace SampleApi.Controllers
                 if (!roleExists || model.Roles[i] == "admin")
                 {
                     ModelState.AddModelError("Role", $"Role '{model.Roles[i]}' does not exist");
-                    var modelErrors = new Dictionary<string, Object>();
-                    modelErrors["message"] = "The request has validation errors.";
-                    modelErrors["errors"] = new SerializableError(ModelState);
-                    return BadRequest(modelErrors);
+                    return BadRequest(ModelState);
                 }
                 model.Roles[i] = model.Roles[i] + repository.TenantId;
             }
@@ -90,7 +84,6 @@ namespace SampleApi.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-
                 return BadRequest(ModelState);
             }
             await repository.GetUserManager().AddToRolesAsync(user, model.Roles);
@@ -124,7 +117,8 @@ namespace SampleApi.Controllers
             {
                 user.Email = model.Email;
             }
-
+            user.ModifiedAt = DateTime.UtcNow;
+            // update password using existing password
             if (!String.IsNullOrEmpty(model.Password) && !String.IsNullOrEmpty(model.NewPassword))
             {
                 var passwordResetResult = await repository.GetUserManager().ChangePasswordAsync(user, model.Password, model.NewPassword);
@@ -134,7 +128,6 @@ namespace SampleApi.Controllers
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
-
                     return BadRequest(ModelState);
                 }
             }
@@ -145,7 +138,6 @@ namespace SampleApi.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-
                 return BadRequest(ModelState);
             }
             return NoContent();

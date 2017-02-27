@@ -1,6 +1,9 @@
+using System;
 using Microsoft.AspNetCore.Mvc;
-using SampleApi.Repository;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
+using SampleApi.Repository;
 
 namespace SampleApi.Controllers
 {
@@ -18,6 +21,13 @@ namespace SampleApi.Controllers
         public BaseController(IRepository repository)
         {
             this.repository = repository;
+        }
+        public override BadRequestObjectResult BadRequest(ModelStateDictionary modelState)
+        {
+            var modelErrors = new Dictionary<string, Object>();
+            modelErrors["message"] = "The request has validation errors.";
+            modelErrors["errors"] = new SerializableError(ModelState);
+            return base.BadRequest(modelErrors);
         }
     }
 }

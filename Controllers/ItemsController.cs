@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using SampleApi.Repository;
 using SampleApi.Models;
 using SampleApi.Models.Dtos;
+using SampleApi.Models.ViewModels;
 using SampleApi.Policies;
 using SampleApi.Filters;
 
@@ -39,7 +40,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadItem)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            var entity = await repository.GetByIdAsync<Item, ItemDto>(id,ItemDto.SelectProperties);
+            var entity = await repository.GetByIdAsync<Item, ItemDto>(id, ItemDto.SelectProperties);
             if (entity != null)
             {
                 return Json(entity);
@@ -49,23 +50,29 @@ namespace SampleApi.Controllers
 
         [HttpPost]
         [Authorize(Policy = PermissionClaims.CreateItem)]
-        public async Task<IActionResult> Create([FromBody] Item entity)
+        public async Task<IActionResult> Create([FromBody] ItemViewModel newItem)
         {
-            repository.Create(entity);
+            var item = new Item
+            {
+                Name = newItem.Name,
+                Cost = newItem.Cost,
+                Color = newItem.Color
+            };
+            repository.Create(item);
             await repository.SaveAsync();
-            return Created($"/api/v1/items/{entity.Id}", new { message = "Item was created successfully!" });
+            return Created($"/api/v1/items/{item.Id}", new { message = "Item was created successfully!" });
         }
 
         [HttpPatch("{id}")]
         [Authorize(Policy = PermissionClaims.UpdateItem)]
-        public async Task<IActionResult> Update([FromRoute] string id, [FromBody] Item updatedEntity)
+        public async Task<IActionResult> Update([FromRoute] string id, [FromBody] ItemViewModel updatedItem)
         {
-            Item entity = repository.GetById<Item>(id);
-            if (entity == null)
+            Item item = await repository.GetByIdAsync<Item>(id);
+            if (item == null)
             {
                 return NotFound(new { message = "Item does not exist!" });
             }
-            repository.Update(entity, updatedEntity);
+            repository.Update(item, updatedItem);
             await repository.SaveAsync();
             return NoContent();
         }
@@ -74,7 +81,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.DeleteItem)]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            Item entity = repository.GetById<Item>(id);
+            Item entity = await repository.GetByIdAsync<Item>(id);
             if (entity == null)
             {
                 return NotFound(new { message = "Item does not exist!" });
