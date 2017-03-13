@@ -106,23 +106,28 @@ namespace SampleApi.Controllers
 
                 return SignIn(ticket.Principal, ticket.Properties, ticket.AuthenticationScheme);
             }
-            else if (request.IsRefreshTokenGrantType()) {
+            else if (request.IsRefreshTokenGrantType())
+            {
                 // Retrieve the claims principal stored in the refresh token.
                 var info = await HttpContext.Authentication.GetAuthenticateInfoAsync(
                     OpenIdConnectServerDefaults.AuthenticationScheme);
 
                 // Retrieve the user profile corresponding to the refresh token.
                 var user = await _repository.GetUserManager().GetUserAsync(info.Principal);
-                if (user == null) {
-                    return BadRequest(new OpenIdConnectResponse {
+                if (user == null)
+                {
+                    return BadRequest(new OpenIdConnectResponse
+                    {
                         Error = OpenIdConnectConstants.Errors.InvalidGrant,
                         ErrorDescription = "The refresh token is no longer valid."
                     });
                 }
 
                 // Ensure the user is still allowed to sign in.
-                if (!await _repository.GetSignInManager().CanSignInAsync(user)) {
-                    return BadRequest(new OpenIdConnectResponse {
+                if (!await _repository.GetSignInManager().CanSignInAsync(user))
+                {
+                    return BadRequest(new OpenIdConnectResponse
+                    {
                         Error = OpenIdConnectConstants.Errors.InvalidGrant,
                         ErrorDescription = "The user is no longer allowed to sign in."
                     });
@@ -142,9 +147,12 @@ namespace SampleApi.Controllers
             });
         }
 
-        private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, ApplicationUser user,  AuthenticationProperties properties = null)
+        private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, ApplicationUser user, AuthenticationProperties properties = null)
         {
-            var identity = new ClaimsIdentity(OpenIdConnectServerDefaults.AuthenticationScheme);
+            var identity = new ClaimsIdentity(
+                OpenIdConnectServerDefaults.AuthenticationScheme,
+                OpenIdConnectConstants.Claims.Name,
+                OpenIdConnectConstants.Claims.Role);
             var roles = await _repository.GetUserManager().GetRolesAsync(user);
             var permissionClaims = new List<Claim>();
 
@@ -152,7 +160,7 @@ namespace SampleApi.Controllers
             foreach (var role in roles)
             {
                 // Remove tenant id from roles to make them user friendly
-                identity.AddClaim(ClaimTypes.Role, role.Substring(0,role.Length - user.TenantId.Length),
+                identity.AddClaim(OpenIdConnectConstants.Claims.Role, role.Substring(0, role.Length - user.TenantId.Length),
                     OpenIdConnectConstants.Destinations.AccessToken,
                     OpenIdConnectConstants.Destinations.IdentityToken);
                 // Get all the permission claims of the role
@@ -163,14 +171,15 @@ namespace SampleApi.Controllers
             // add check for permission claim - not needed access claims through roles only
             // permissionClaims.AddRange(await _repository.GetUserManager().GetClaimsAsync(user));
 
-            identity.AddClaim(ClaimTypes.NameIdentifier, user.Id,
+            identity.AddClaim(OpenIdConnectConstants.Claims.Subject, user.Id,
                 OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
-            identity.AddClaim(ClaimTypes.Name, user.Email,
+            identity.AddClaim(OpenIdConnectConstants.Claims.Email, user.Email,
                 OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
 
-            if(user is ITenantEntity ){
+            if (user is ITenantEntity)
+            {
                 identity.AddClaim(CustomClaimTypes.Tid, user.TenantId,
                 OpenIdConnectConstants.Destinations.AccessToken);
             }
@@ -183,7 +192,7 @@ namespace SampleApi.Controllers
             // Set the list of scopes granted to the client application.
             // Note: the offline_access scope must be granted
             // to allow OpenIddict to return a refresh token.
-            
+
             var scopes = new List<string> {
                 OpenIdConnectConstants.Scopes.OpenId,
                 OpenIdConnectConstants.Scopes.Email,

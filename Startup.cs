@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using AspNet.Security.OpenIdConnect.Primitives;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -96,6 +97,13 @@ namespace SampleApi
             // Add authentication
             services.AddAuthentication();
 
+            // Configure Identity to use the same JWT claims as OpenIddict 
+            services.Configure<IdentityOptions>(options =>
+            {
+               options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
+               options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
+            });
+
             // Add OpenId Connect/OAuth2
             services.AddOpenIddict()
                 .AddEntityFrameworkCoreStores<ApplicationDbContext>()
@@ -107,10 +115,10 @@ namespace SampleApi
                 // You can disable the HTTPS requirement during development or if behind a reverse proxy
                 .DisableHttpsRequirement()
                 .AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.Get<AppOptions>().Jwt.SecretKey)));
-                // Register a new ephemeral key, that is discarded when the application
-                // shuts down. Tokens signed using this key are automatically invalidated.
-                // To be used during development
-                //.AddEphemeralSigningKey();
+            // Register a new ephemeral key, that is discarded when the application
+            // shuts down. Tokens signed using this key are automatically invalidated.
+            // To be used during development
+            //.AddEphemeralSigningKey();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
