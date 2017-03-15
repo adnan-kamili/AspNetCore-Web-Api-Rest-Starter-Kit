@@ -7,8 +7,8 @@ using SampleApi.Repository;
 
 namespace SampleApi.Controllers
 {
-    [Route("api/v1/[controller]")]
-    public abstract class BaseController<TEntity> : Controller
+    [Route("~/v1/[controller]")]
+    public abstract class BaseController : Controller
     {
         protected readonly IRepository repository;
 

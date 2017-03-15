@@ -13,8 +13,8 @@ using SampleApi.Models.Dtos;
 
 namespace SampleApi.Controllers
 {
-    [Route("api/v1/[controller]")]
-    public class RolesController : BaseController<ApplicationRole>
+    [Route("~/v1/[controller]")]
+    public class RolesController : BaseController
     {
         private string[] _includeProperties = { "Claims" };
         public RolesController(IRepository repository) : base(repository)

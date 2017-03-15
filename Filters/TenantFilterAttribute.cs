@@ -17,7 +17,7 @@ namespace SampleApi.Filters
         {
             // Set tenant id in the repository
             ClaimsIdentity claimsIdentity = context.HttpContext.User.Identity as ClaimsIdentity;
-            Claim claim = claimsIdentity?.FindFirst(CustomClaimTypes.Tid);
+            Claim claim = claimsIdentity?.FindFirst(CustomClaimTypes.TenantId);
             if (claim != null)
             {
                 _repository.TenantId = claim.Value;

@@ -112,7 +112,7 @@ namespace SampleApi
                 .AllowPasswordFlow()
                 .AllowRefreshTokenFlow()
                 .UseJsonWebTokens()
-                // You can disable the HTTPS requirement during development or if behind a reverse proxy
+                // You can disable the HTTPS requirement during development or if behind a HTTPS reverse proxy
                 .DisableHttpsRequirement()
                 .AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.Get<AppOptions>().Jwt.SecretKey)));
             // Register a new ephemeral key, that is discarded when the application
@@ -136,7 +136,7 @@ namespace SampleApi
             {
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true,
-                RequireHttpsMetadata = env.IsProduction(),
+                RequireHttpsMetadata = false, // during development or if behind a HTTPS reverse proxy
                 Audience = Configuration.Get<AppOptions>().Jwt.Audience,
                 Authority = Configuration.Get<AppOptions>().Jwt.Authority,
                 TokenValidationParameters = new TokenValidationParameters

@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 
@@ -14,8 +13,8 @@ using SampleApi.Models.ViewModels;
 
 namespace SampleApi.Controllers
 {
-    [Route("api/v1/[controller]")]
-    public class UsersController : BaseController<ApplicationUser>
+    [Route("~/v1/[controller]")]
+    public class UsersController : BaseController
     {
         private string[] _includeProperties = { "Roles" };
         public UsersController(IRepository repository) : base(repository)

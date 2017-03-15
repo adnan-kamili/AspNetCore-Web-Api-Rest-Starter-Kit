@@ -180,7 +180,7 @@ namespace SampleApi.Controllers
 
             if (user is ITenantEntity)
             {
-                identity.AddClaim(CustomClaimTypes.Tid, user.TenantId,
+                identity.AddClaim(CustomClaimTypes.TenantId, user.TenantId,
                 OpenIdConnectConstants.Destinations.AccessToken);
             }
 

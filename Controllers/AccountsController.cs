@@ -11,7 +11,7 @@ using SampleApi.Models.ViewModels;
 
 namespace SampleApi.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("~/v1/[controller]")]
     public class AccountsController : Controller
     {
         private readonly IRepository _repository;
