@@ -35,7 +35,7 @@ namespace SampleApi.Controllers
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
             var roleList = await repository.GetAllAsync<ApplicationRole, ApplicationRoleDto>(ApplicationRoleDto.SelectProperties, null, _includeProperties, skip, limit);
-            return Json(roleList);
+            return Ok(roleList);
         }
 
         [HttpGet("{id}")]
@@ -47,7 +47,7 @@ namespace SampleApi.Controllers
             {
                 return NotFound(new { message = "Role with id '" + id + "' does not exist!" });
             }
-            return Json(role);
+            return Ok(role);
         }
 
         [HttpPost]

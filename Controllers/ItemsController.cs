@@ -33,7 +33,7 @@ namespace SampleApi.Controllers
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
             var entityList = await repository.GetAllAsync<Item, ItemDto>(ItemDto.SelectProperties, null, null, skip, limit);
-            return Json(entityList);
+            return Ok(entityList);
         }
 
         [HttpGet("{id}")]
@@ -43,7 +43,7 @@ namespace SampleApi.Controllers
             var entity = await repository.GetByIdAsync<Item, ItemDto>(id, ItemDto.SelectProperties);
             if (entity != null)
             {
-                return Json(entity);
+                return Ok(entity);
             }
             return NotFound(new { message = "Item does not exist!" });
         }

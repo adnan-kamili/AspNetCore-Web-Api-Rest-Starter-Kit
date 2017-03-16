@@ -35,7 +35,7 @@ namespace SampleApi.Controllers
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
             var userList = await repository.GetAllAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, null, null, skip, limit);
-            return Json(userList);
+            return Ok(userList);
         }
 
         [HttpGet("{id}")]
@@ -45,7 +45,7 @@ namespace SampleApi.Controllers
             var user = await repository.GetByIdAsync<ApplicationUser, ApplicationUserDto>(id, ApplicationUserDto.SelectProperties, _includeProperties);
             if (user != null)
             {
-                return Json(user);
+                return Ok(user);
             }
             return NotFound(new { message = "User does not exist!" });
         }
