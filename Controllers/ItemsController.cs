@@ -12,7 +12,7 @@ using SampleApi.Filters;
 namespace SampleApi.Controllers
 {
     [Route("api/v1/[controller]")]
-    public class ItemsController : BaseController<Item>
+    public class ItemsController : BaseController
     {
         public ItemsController(IRepository repository) : base(repository)
         {
