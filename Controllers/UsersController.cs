@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 
 using SampleApi.Models;
@@ -59,15 +61,22 @@ namespace SampleApi.Controllers
                 ModelState.AddModelError("Email", "Email is already in use");
                 return BadRequest(ModelState);
             }
-            for (var i = 0; i < model.Roles.Count; i++)
+            var roles = new List<string>();
+            foreach (var roleId in model.Roles)
             {
-                bool roleExists = await repository.GetRoleManager().RoleExistsAsync(model.Roles[i] + repository.TenantId);
-                if (!roleExists || model.Roles[i] == "admin")
+                var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
+                if (role == null)
                 {
-                    ModelState.AddModelError("Role", $"Role '{model.Roles[i]}' does not exist");
+                    ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
                     return BadRequest(ModelState);
                 }
-                model.Roles[i] = model.Roles[i] + repository.TenantId;
+                else if (role.Name == "admin")
+                {
+                    ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
+                    return BadRequest(ModelState);
+                }
+                // ensure stored role names are unique across tenants
+                roles.Add(role.Name + repository.TenantId);
             }
             var user = new ApplicationUser
             {
@@ -85,7 +94,7 @@ namespace SampleApi.Controllers
                 }
                 return BadRequest(ModelState);
             }
-            await repository.GetUserManager().AddToRolesAsync(user, model.Roles);
+            await repository.GetUserManager().AddToRolesAsync(user, roles);
             await repository.SaveAsync();
             return Created($"/api/v1/users/{user.Id}", new { message = "User was created successfully!" });
         }
@@ -94,7 +103,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.UpdateUser)]
         public async Task<IActionResult> Update([FromRoute] string id, [FromBody] UserViewModel model)
         {
-            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id);
+            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id, _includeProperties);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
@@ -107,33 +116,118 @@ namespace SampleApi.Controllers
                     return Forbid();
                 }
             }
+            var rolesToAdd = new List<string>();
+            var rolesToRemove = new List<string>();
+            foreach (var roleId in model.Roles)
+            {
+                var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
+                if (role == null)
+                {
+                    ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
+                    return BadRequest(ModelState);
+                }
+                else if (role.Name == "admin")
+                {
+                    ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
+                    return BadRequest(ModelState);
+                }
+                if (user.Roles.Select(r => r.RoleId == roleId) != null)
+                {
+                    // ensure stored role names are unique across tenants
+                    rolesToAdd.Add(role.Name + repository.TenantId);
+                }
 
+            }
+            foreach (var userRole in user.Roles)
+            {
+                if (model.Roles.Contains(userRole.RoleId) == false)
+                {
+                    var role = await repository.GetByIdAsync<ApplicationRole>(userRole.RoleId);
+                    // ensure stored role names are unique across tenants
+                    rolesToRemove.Add(role.Name + repository.TenantId);
+                }
+            }
             if (!String.IsNullOrEmpty(model.Name))
             {
                 user.Name = model.Name;
             }
-            if (!String.IsNullOrEmpty(model.Email))
-            {
-                user.Email = model.Email;
-            }
             user.ModifiedAt = DateTime.UtcNow;
-            // update password using existing password
-            if (!String.IsNullOrEmpty(model.Password) && !String.IsNullOrEmpty(model.NewPassword))
-            {
-                var passwordResetResult = await repository.GetUserManager().ChangePasswordAsync(user, model.Password, model.NewPassword);
-                if (!passwordResetResult.Succeeded)
-                {
-                    foreach (var error in passwordResetResult.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
-                    return BadRequest(ModelState);
-                }
-            }
             var userUpdateResult = await repository.GetUserManager().UpdateAsync(user);
             if (!userUpdateResult.Succeeded)
             {
                 foreach (var error in userUpdateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+            await repository.GetUserManager().RemoveFromRolesAsync(user, rolesToRemove);
+            await repository.GetUserManager().AddToRolesAsync(user, rolesToAdd);
+            return NoContent();
+        }
+
+        [HttpPut("{id}/password")]
+        [Authorize(Policy = PermissionClaims.UpdateUser)]
+        public async Task<IActionResult> UpdatePassword([FromRoute] string id, [FromBody] UserPasswordViewModel model)
+        {
+            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id, _includeProperties);
+            if (user == null)
+            {
+                return NotFound(new { message = "User does not exist!" });
+            }
+            if (!HttpContext.User.IsInRole("admin" + repository.TenantId))
+            {
+                // only admin or current user can update current user's profile
+                if (!HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id))
+                {
+                    return Forbid();
+                }
+            }
+            var result = await repository.GetUserManager().ChangePasswordAsync(user, model.Password, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+            user.ModifiedAt = DateTime.UtcNow;
+            await repository.GetUserManager().UpdateAsync(user);
+            return NoContent();
+        }
+
+        [HttpPut("{id}/email")]
+        [Authorize(Policy = PermissionClaims.UpdateUser)]
+        public async Task<IActionResult> UpdateEmail([FromRoute] string id, [FromBody] UserEmailViewModel model)
+        {
+            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id, _includeProperties);
+            if (user == null)
+            {
+                return NotFound(new { message = "User does not exist!" });
+            }
+            if (!HttpContext.User.IsInRole("admin" + repository.TenantId))
+            {
+                // only admin or current user can update current user's email
+                if (!HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id))
+                {
+                    return Forbid();
+                }
+            }
+            if (model.Email != user.Email)
+            {
+                if (await repository.GetUserManager().FindByEmailAsync(model.Email) != null)
+                {
+                    ModelState.AddModelError("Email", "Email is already in use");
+                    return BadRequest(ModelState);
+                }
+            }
+            user.Email = model.Email;
+            user.ModifiedAt = DateTime.UtcNow;
+            var result = await repository.GetUserManager().UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
