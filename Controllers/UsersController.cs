@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -61,7 +62,13 @@ namespace SampleApi.Controllers
                 ModelState.AddModelError("Email", "Email is already in use");
                 return BadRequest(ModelState);
             }
-            var roles = new List<string>();
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                Name = model.Name,
+                TenantId = repository.TenantId
+            };
             foreach (var roleId in model.Roles)
             {
                 var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
@@ -75,28 +82,22 @@ namespace SampleApi.Controllers
                     ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
                     return BadRequest(ModelState);
                 }
-                // ensure stored role names are unique across tenants
-                roles.Add(role.Name + repository.TenantId);
+                user.Roles.Add(new IdentityUserRole<string> {
+                    UserId = user.Id,
+                    RoleId = role.Id
+                });
             }
-            var user = new ApplicationUser
+            var result = await repository.GetUserManager().CreateAsync(user, model.Password);
+            if (!result.Succeeded)
             {
-                UserName = model.Email,
-                Email = model.Email,
-                Name = model.Name,
-                TenantId = repository.TenantId
-            };
-            var userCreationResult = await repository.GetUserManager().CreateAsync(user, model.Password);
-            if (!userCreationResult.Succeeded)
-            {
-                foreach (var error in userCreationResult.Errors)
+                foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
                 return BadRequest(ModelState);
             }
-            await repository.GetUserManager().AddToRolesAsync(user, roles);
             await repository.SaveAsync();
-            return Created($"/api/v1/users/{user.Id}", new { message = "User was created successfully!" });
+            return Created($"/v1/users/{user.Id}", new { message = "User was created successfully!" });
         }
 
         [HttpPatch("{id}")] // needs update in update, partial role updates
