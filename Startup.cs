@@ -100,8 +100,8 @@ namespace SampleApi
             // Configure Identity to use the same JWT claims as OpenIddict 
             services.Configure<IdentityOptions>(options =>
             {
-               options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
-               options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
+                options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
+                options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
 
             // Add OpenId Connect/OAuth2
@@ -157,6 +157,12 @@ namespace SampleApi
 
             // Add OpedId Connect middleware
             app.UseOpenIddict();
+
+            // Add CORS middleware
+            app.UseCors(builder =>
+                builder.WithOrigins("http://localhost","http://app.example.com")
+                .AllowAnyMethod()
+                .AllowAnyHeader());
 
             // Add Mvc middleware
             app.UseMvc();

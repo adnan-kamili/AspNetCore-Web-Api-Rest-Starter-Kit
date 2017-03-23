@@ -177,6 +177,9 @@ namespace SampleApi.Controllers
             identity.AddClaim(OpenIdConnectConstants.Claims.Email, user.Email,
                 OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
+            identity.AddClaim(OpenIdConnectConstants.Claims.Name, user.Name,
+                OpenIdConnectConstants.Destinations.AccessToken,
+                OpenIdConnectConstants.Destinations.IdentityToken);
 
             if (user is ITenantEntity)
             {
