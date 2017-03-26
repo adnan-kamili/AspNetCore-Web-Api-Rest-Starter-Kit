@@ -23,7 +23,7 @@ namespace SampleApi.Controllers
 
         [PaginationHeadersFilter]
         [HttpGet]
-        [Authorize(Policy = PermissionClaims.ReadRole)]
+        [Authorize(Policy = PermissionClaims.ReadRoles)]
         public async Task<IActionResult> GetList([FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
         {
             page = (page < firstPage) ? firstPage : page;
@@ -54,6 +54,8 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.CreateRole)]
         public async Task<IActionResult> Create([FromBody] RoleViewModel model)
         {
+            // make role names case insensitive
+            model.Name = model.Name.ToLower();
             if (await repository.GetRoleManager().RoleExistsAsync(model.Name + repository.TenantId))
             {
                 ModelState.AddModelError("Role", $"Role {model.Name} already exists.");

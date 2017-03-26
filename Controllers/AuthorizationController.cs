@@ -84,11 +84,11 @@ namespace SampleApi.Controllers
                 // Ensure the password is valid.
                 if (!await _repository.GetUserManager().CheckPasswordAsync(user, request.Password))
                 {
-                    if (_repository.GetUserManager().SupportsUserLockout)
-                    {
-                        await _repository.GetUserManager().AccessFailedAsync(user);
-                    }
-
+                    // In MySQL DateTimeOffset is not support, which prevents usage of Lockout feature
+                    // if (_repository.GetUserManager().SupportsUserLockout)
+                    // {
+                    //     await _repository.GetUserManager().AccessFailedAsync(user);
+                    // }
                     return BadRequest(new OpenIdConnectResponse
                     {
                         Error = OpenIdConnectConstants.Errors.InvalidGrant,

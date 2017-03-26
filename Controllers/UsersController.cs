@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -26,18 +27,24 @@ namespace SampleApi.Controllers
 
         [PaginationHeadersFilter]
         [HttpGet]
-        [Authorize(Policy = PermissionClaims.ReadUser)]
-        public async Task<IActionResult> GetList([FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
+        [Authorize(Policy = PermissionClaims.ReadUsers)]
+        public async Task<IActionResult> GetList([FromQuery] string[] roles, [FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
         {
             page = (page < firstPage) ? firstPage : page;
             limit = (limit < minLimit) ? minLimit : limit;
             limit = (limit > maxLimit) ? maxLimit : limit;
             int skip = (page - 1) * limit;
-            int count = await repository.GetCountAsync<ApplicationUser>(null);
+            Expression<Func<ApplicationUser, bool>> filter = null;
+            if (roles.Length > 0)
+            {
+                // get users by given roles
+                filter = user => user.Roles.Select(role => role.RoleId).Any(roleId => roles.Contains(roleId));
+            }
+            int count = await repository.GetCountAsync<ApplicationUser>(filter);
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
-            var userList = await repository.GetAllAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, null, null, skip, limit);
+            var userList = await repository.GetAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, filter, null, null, skip, limit);
             return Ok(userList);
         }
 
@@ -50,7 +57,7 @@ namespace SampleApi.Controllers
             {
                 return Ok(user);
             }
-            return NotFound(new { message = "User does not exist!" });
+            return NotFound(new { message = "User does not exist" });
         }
 
         [HttpPost]
@@ -77,12 +84,13 @@ namespace SampleApi.Controllers
                     ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
                     return BadRequest(ModelState);
                 }
-                else if (role.Name == "admin")
+                else if (role.Name == "admin" + repository.TenantId)
                 {
                     ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
                     return BadRequest(ModelState);
                 }
-                user.Roles.Add(new IdentityUserRole<string> {
+                user.Roles.Add(new IdentityUserRole<string>
+                {
                     UserId = user.Id,
                     RoleId = role.Id
                 });
@@ -109,7 +117,7 @@ namespace SampleApi.Controllers
             {
                 return NotFound(new { message = "User does not exist!" });
             }
-            if (!HttpContext.User.IsInRole("admin" + repository.TenantId))
+            if (!HttpContext.User.IsInRole("admin"))
             {
                 // only admin or current user can update current user's profile
                 if (!HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id))
@@ -119,35 +127,41 @@ namespace SampleApi.Controllers
             }
             var rolesToAdd = new List<string>();
             var rolesToRemove = new List<string>();
-            foreach (var roleId in model.Roles)
-            {
-                var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
-                if (role == null)
-                {
-                    ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
-                    return BadRequest(ModelState);
-                }
-                else if (role.Name == "admin")
-                {
-                    ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
-                    return BadRequest(ModelState);
-                }
-                if (user.Roles.Select(r => r.RoleId == roleId) != null)
-                {
-                    // ensure stored role names are unique across tenants
-                    rolesToAdd.Add(role.Name + repository.TenantId);
-                }
 
-            }
-            foreach (var userRole in user.Roles)
+            // only non-admin  user roles can be updated
+            if (!HttpContext.User.IsInRole("admin"))
             {
-                if (model.Roles.Contains(userRole.RoleId) == false)
+                foreach (var roleId in model.Roles)
                 {
-                    var role = await repository.GetByIdAsync<ApplicationRole>(userRole.RoleId);
-                    // ensure stored role names are unique across tenants
-                    rolesToRemove.Add(role.Name + repository.TenantId);
+                    var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
+                    if (role == null)
+                    {
+                        ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
+                        return BadRequest(ModelState);
+                    }
+                    else if (role.Name == "admin" + repository.TenantId)
+                    {
+                        ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
+                        return BadRequest(ModelState);
+                    }
+                    if (user.Roles.Select(r => r.RoleId == roleId) != null)
+                    {
+                        // ensure stored role names are unique across tenants
+                        rolesToAdd.Add(role.Name + repository.TenantId);
+                    }
+
+                }
+                foreach (var userRole in user.Roles)
+                {
+                    if (model.Roles.Contains(userRole.RoleId) == false)
+                    {
+                        var role = await repository.GetByIdAsync<ApplicationRole>(userRole.RoleId);
+                        // ensure stored role names are unique across tenants
+                        rolesToRemove.Add(role.Name + repository.TenantId);
+                    }
                 }
             }
+
             if (!String.IsNullOrEmpty(model.Name))
             {
                 user.Name = model.Name;
@@ -176,7 +190,7 @@ namespace SampleApi.Controllers
             {
                 return NotFound(new { message = "User does not exist!" });
             }
-            if (!HttpContext.User.IsInRole("admin" + repository.TenantId))
+            if (!HttpContext.User.IsInRole("admin"))
             {
                 // only admin or current user can update current user's profile
                 if (!HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id))
@@ -207,7 +221,7 @@ namespace SampleApi.Controllers
             {
                 return NotFound(new { message = "User does not exist!" });
             }
-            if (!HttpContext.User.IsInRole("admin" + repository.TenantId))
+            if (!HttpContext.User.IsInRole("admin"))
             {
                 // only admin or current user can update current user's email
                 if (!HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id))
@@ -219,7 +233,7 @@ namespace SampleApi.Controllers
             {
                 if (await repository.GetUserManager().FindByEmailAsync(model.Email) != null)
                 {
-                    ModelState.AddModelError("Email", "Email is already in use");
+                    ModelState.AddModelError("email", "Email is already in use");
                     return BadRequest(ModelState);
                 }
             }
@@ -230,7 +244,7 @@ namespace SampleApi.Controllers
             {
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError("email", error.Description);
                 }
                 return BadRequest(ModelState);
             }

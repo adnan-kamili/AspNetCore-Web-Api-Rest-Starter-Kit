@@ -12,7 +12,7 @@ namespace SampleApi.Filters
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             // Allow partial update
-            if (!context.ModelState.IsValid && context.HttpContext.Request.Method == "PATCH")
+            if (!context.ModelState.IsValid && (context.HttpContext.Request.Method == "PATCH" || context.HttpContext.Request.Method == "PUT"))
             {
                 // get the errors which only have 'required type' error
                 var modelStateErrors = context.ModelState.Where(model =>
@@ -39,7 +39,7 @@ namespace SampleApi.Filters
                 var modelErrors = new Dictionary<string, Object>();
                 modelErrors["message"] = "The request has validation errors.";
                 modelErrors["errors"] = new SerializableError(context.ModelState);
-                context.Result = new BadRequestObjectResult(context.ModelState);
+                context.Result = new BadRequestObjectResult(modelErrors);
             }
         }
     }

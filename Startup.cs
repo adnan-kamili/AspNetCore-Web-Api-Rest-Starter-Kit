@@ -100,6 +100,11 @@ namespace SampleApi
             // Configure Identity to use the same JWT claims as OpenIddict 
             services.Configure<IdentityOptions>(options =>
             {
+                options.Password.RequiredLength = 8;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
                 options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
                 options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
