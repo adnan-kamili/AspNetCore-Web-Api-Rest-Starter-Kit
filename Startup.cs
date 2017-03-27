@@ -4,7 +4,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
-using MySQL.Data.Entity.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -44,7 +44,7 @@ namespace SampleApi
             // Add database Context
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseMySQL(Configuration.Get<AppOptions>().ConnectionStrings.MySqlProvider);
+                options.UseMySql(Configuration.Get<AppOptions>().ConnectionStrings.MySqlProvider);
                 options.UseOpenIddict();
             });
             services.AddScoped(typeof(IRepository), typeof(EFRepository<ApplicationDbContext>));
