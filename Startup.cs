@@ -141,13 +141,15 @@ namespace SampleApi
             {
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true,
-                RequireHttpsMetadata = false, // during development or if behind a HTTPS reverse proxy
+                RequireHttpsMetadata = env.IsProduction(), // during development
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
                     ValidateIssuer = true,
+                    ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
                     ValidateAudience = true,
+                    ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
                     ValidateLifetime = true,
                 }
             });
