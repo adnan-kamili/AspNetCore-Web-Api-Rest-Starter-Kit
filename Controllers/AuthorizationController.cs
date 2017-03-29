@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
@@ -174,10 +175,8 @@ namespace SampleApi.Controllers
                 OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
             identity.AddClaim(OpenIdConnectConstants.Claims.Email, user.Email,
-                OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
             identity.AddClaim(OpenIdConnectConstants.Claims.Name, user.Name,
-                OpenIdConnectConstants.Destinations.AccessToken,
                 OpenIdConnectConstants.Destinations.IdentityToken);
 
             if (user is ITenantEntity)
@@ -208,7 +207,10 @@ namespace SampleApi.Controllers
                 scopes.Add(claim.Value);
             }
             ticket.SetScopes(scopes);
-            ticket.SetResources(_appOptions.Jwt.Audience);
+            ticket.SetAudiences(_appOptions.Jwt.Audiences);
+            ticket.SetAccessTokenLifetime(TimeSpan.FromSeconds(_appOptions.Jwt.AccessTokenLifetime));
+            ticket.SetIdentityTokenLifetime(TimeSpan.FromSeconds(_appOptions.Jwt.IdentityTokenLifetime));
+            ticket.SetRefreshTokenLifetime(TimeSpan.FromSeconds(_appOptions.Jwt.RefreshTokenLifetime));
             return ticket;
         }
     }

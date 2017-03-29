@@ -30,7 +30,7 @@ namespace SampleApi
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName.ToLower()}.json", optional: true)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
         }
@@ -142,20 +142,12 @@ namespace SampleApi
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true,
                 RequireHttpsMetadata = false, // during development or if behind a HTTPS reverse proxy
-                Audience = Configuration.Get<AppOptions>().Jwt.Audience,
-                Authority = Configuration.Get<AppOptions>().Jwt.Authority,
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
-
                     ValidateIssuer = true,
-                    // makes no difference seemingly being ignored
-                    //ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
-
                     ValidateAudience = true,
-                    ValidAudience = Configuration.Get<AppOptions>().Jwt.Audience,
-
                     ValidateLifetime = true,
                 }
             });
