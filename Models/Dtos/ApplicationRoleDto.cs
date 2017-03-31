@@ -14,7 +14,7 @@ namespace SampleApi.Models.Dtos
         public static Expression<Func<ApplicationRole, ApplicationRoleDto>> SelectProperties = (role) => new ApplicationRoleDto
         {
             Id = role.Id,
-            Name = role.Name.Substring(0, role.Name.Length - role.TenantId.Length),
+            Name = role.Name.Replace(role.TenantId, string.Empty),
             Description = role.Description,
             Claims = role.Claims.Select(claim => claim.ClaimValue).ToList(),
             CreatedAt = role.CreatedAt,

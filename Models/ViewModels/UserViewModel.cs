@@ -14,6 +14,7 @@ namespace SampleApi.Models.ViewModels
         [MinLength(8)]
         public string Password { get; set; }
         [Required]
-        public List<string> Roles { get; set; }
+        public List<string> Roles { get; set; } = new List<string>();
+
     }
 }

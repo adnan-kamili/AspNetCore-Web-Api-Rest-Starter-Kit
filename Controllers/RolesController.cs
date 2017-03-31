@@ -1,7 +1,10 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 
 using SampleApi.Repository;
@@ -165,6 +168,13 @@ namespace SampleApi.Controllers
             {
                 // admin role can't be deleted
                 return Forbid();
+            }
+            Expression<Func<ApplicationUser, bool>> filter = user => user.Roles.Select(r => r.RoleId).Any(roleId => roleId == role.Id);
+            var userList = await repository.GetAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, filter, null, null);
+            if (userList.ToList().Count > 0)
+            {
+                this.HttpContext.Response.StatusCode = StatusCodes.Status409Conflict;
+                return Json(new { message = "Role is in use!" });
             }
             var roleDeleteResult = repository.GetRoleManager().DeleteAsync(role).Result;
             if (!roleDeleteResult.Succeeded)

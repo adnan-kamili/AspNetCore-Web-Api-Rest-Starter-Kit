@@ -26,7 +26,7 @@ namespace SampleApi.Controllers
         {
             if (await _repository.GetUserManager().FindByEmailAsync(model.Email) != null)
             {
-                ModelState.AddModelError("Email", "Email is already in use");
+                ModelState.AddModelError("email", "Email is already in use");
                 var modelErrors = new Dictionary<string, Object>();
                 modelErrors["message"] = "The request has validation errors.";
                 modelErrors["errors"] = new SerializableError(ModelState);

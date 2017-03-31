@@ -153,18 +153,19 @@ namespace SampleApi.Controllers
                 OpenIdConnectServerDefaults.AuthenticationScheme,
                 OpenIdConnectConstants.Claims.Name,
                 OpenIdConnectConstants.Claims.Role);
-            var roles = await _repository.GetUserManager().GetRolesAsync(user);
+            var roleNames = await _repository.GetUserManager().GetRolesAsync(user);
             var permissionClaims = new List<Claim>();
 
             // Get all the roles and add them to the role claim
-            foreach (var role in roles)
+            foreach (var roleName in roleNames)
             {
-                // Remove tenant id from roles to make them user friendly
-                identity.AddClaim(OpenIdConnectConstants.Claims.Role, role.Substring(0, role.Length - user.TenantId.Length),
+                // Remove tenant id from role name to make it user friendly
+                identity.AddClaim(OpenIdConnectConstants.Claims.Role, roleName.Replace(user.TenantId,string.Empty),
                     OpenIdConnectConstants.Destinations.AccessToken,
                     OpenIdConnectConstants.Destinations.IdentityToken);
+                var role = await _repository.GetRoleManager().FindByNameAsync(roleName);
                 // Get all the permission claims of the role
-                permissionClaims.AddRange(await _repository.GetRoleManager().GetClaimsAsync(new ApplicationRole(role, user.TenantId)));
+                permissionClaims.AddRange(await _repository.GetRoleManager().GetClaimsAsync(role));
             }
             // Get all the permission claims of the user if any
 

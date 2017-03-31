@@ -9,6 +9,6 @@ namespace SampleApi.Models.ViewModels
         public string Name { get; set; }
         public string Description { get; set; }
         [Required]
-        public List<string> Claims { get; set; }
+        public List<string> Claims { get; set; } = new List<string>();
     }
 }

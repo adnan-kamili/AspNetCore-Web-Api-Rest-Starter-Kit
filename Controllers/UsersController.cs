@@ -37,8 +37,15 @@ namespace SampleApi.Controllers
             Expression<Func<ApplicationUser, bool>> filter = null;
             if (roles.Length > 0)
             {
+                var roleIds = new List<string>();
+                foreach (string roleName in roles){
+                    var role = await repository.GetRoleManager().FindByNameAsync(roleName + repository.TenantId);
+                    if(role != null){
+                        roleIds.Add(role.Id);
+                    }
+                }
                 // get users by given roles
-                filter = user => user.Roles.Select(role => role.RoleId).Any(roleId => roles.Contains(roleId));
+                filter = user => user.Roles.Select(role => role.RoleId).Any(roleId => roleIds.Contains(roleId));
             }
             int count = await repository.GetCountAsync<ApplicationUser>(filter);
             HttpContext.Items["count"] = count.ToString();
@@ -76,7 +83,7 @@ namespace SampleApi.Controllers
                 Name = model.Name,
                 TenantId = repository.TenantId
             };
-            foreach (var roleId in model.Roles)
+            foreach (var roleId in model.Roles.Distinct())
             {
                 var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
                 if (role == null)
