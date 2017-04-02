@@ -7,13 +7,13 @@ namespace SampleApi.Policies
     public static class PermissionClaims
     {
         public const string ReadUser = "user:read";
-        public const string ReadUsers = "users:read";
+        public const string ReadUsers = "user:readAll";
         public const string CreateUser = "user:create";
         public const string UpdateUser = "user:update";
         public const string DeleteUser = "user:delete";
 
         public const string ReadRole = "role:read";
-        public const string ReadRoles = "roles:read";
+        public const string ReadRoles = "role:readAll";
         public const string CreateRole = "role:create";
         public const string UpdateRole = "role:update";
         public const string DeleteRole = "role:delete";
