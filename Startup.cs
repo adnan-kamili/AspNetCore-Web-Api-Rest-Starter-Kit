@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using AspNet.Security.OpenIdConnect.Primitives;
+using Swashbuckle.AspNetCore.Swagger;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -90,7 +91,8 @@ namespace SampleApi
                .AddJsonFormatters()
                .AddAuthorization()
                .AddDataAnnotations()
-               .AddCors();
+               .AddCors()
+               .AddApiExplorer();
 
 
 
@@ -124,6 +126,12 @@ namespace SampleApi
             // shuts down. Tokens signed using this key are automatically invalidated.
             // To be used during development
             //.AddEphemeralSigningKey();
+
+            // Add Swagger generator
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new Info { Title = "My Web API", Version = "v1" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -159,12 +167,22 @@ namespace SampleApi
 
             // Add CORS middleware
             app.UseCors(builder =>
-                builder.WithOrigins("http://localhost","http://app.example.com")
+                builder.WithOrigins("http://localhost", "http://app.example.com")
                 .AllowAnyMethod()
                 .AllowAnyHeader());
 
             // Add Mvc middleware
             app.UseMvc();
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS etc.), specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "apidocs";
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My Web API");
+            });
 
             // Database intializer
             repository.EnsureDatabaseCreated();
