@@ -17,7 +17,7 @@ using SampleApi.Models.ViewModels;
 
 namespace SampleApi.Controllers
 {
-    [Route("~/v1/[controller]")]
+    [Route("~/v1/users")]
     public class UsersController : BaseController
     {
         private string[] _includeProperties = { "Roles" };

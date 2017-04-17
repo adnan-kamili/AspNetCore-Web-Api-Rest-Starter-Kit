@@ -16,7 +16,7 @@ using SampleApi.Models.Dtos;
 
 namespace SampleApi.Controllers
 {
-    [Route("~/v1/[controller]")]
+    [Route("~/v1/roles")]
     public class RolesController : BaseController
     {
         private string[] _includeProperties = { "Claims" };
