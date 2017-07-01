@@ -18,6 +18,7 @@ using SampleApi.Repository;
 using SampleApi.Options;
 using SampleApi.Filters;
 using SampleApi.Policies;
+using SampleApi.Services;
 
 
 namespace SampleApi
@@ -132,6 +133,9 @@ namespace SampleApi
             {
                 options.SwaggerDoc("v1", new Info { Title = "My Web API", Version = "v1" });
             });
+
+            // Add Email Service
+            services.AddTransient<IEmailService, EmailService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

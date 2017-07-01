@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 using SampleApi.Models;
 using SampleApi.Models.ViewModels;
-
+using SampleApi.Services;
 
 namespace SampleApi.Controllers
 {
@@ -15,9 +15,11 @@ namespace SampleApi.Controllers
     public class AccountsController : Controller
     {
         private readonly IRepository _repository;
-        public AccountsController(IRepository repository)
+        private readonly IEmailService _emailService;
+        public AccountsController(IRepository repository, IEmailService emailService)
         {
             this._repository = repository;
+            this._emailService = emailService;
         }
 
         [AllowAnonymous]
@@ -67,6 +69,43 @@ namespace SampleApi.Controllers
             }
             await _repository.GetUserManager().AddToRoleAsync(user, adminRole.Name);
             return Created($"/api/v1/users/{user.Id}", new { message = "User account was created successfully!" });
+        }
+
+        [AllowAnonymous]
+        [HttpPut("password")]
+        public async Task<IActionResult> SendPasswordResetLink([FromBody] UserEmailViewModel model)
+        {
+            ApplicationUser user = await _repository.GetUserManager().FindByEmailAsync(model.Email);
+            if (user != null)
+            {
+                var token = _repository.GetUserManager().GeneratePasswordResetTokenAsync(user).Result;
+                var url = $"https://app.example.com/reset-password?email={model.Email}&token={token}";
+                var message = $"<a href='{url}'>Click to reset password!</a>";
+                await _emailService.SendEmailAsync(user.Email, "Password reset request", message);
+            }
+            return NoContent();
+        }
+
+        [AllowAnonymous]
+        [HttpPut("password-reset")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordViewModel model)
+        {
+            ApplicationUser user = await _repository.GetUserManager().FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError("email", "Email does not exist");
+                return BadRequest(ModelState);
+            }
+            var result = _repository.GetUserManager().ResetPasswordAsync(user, model.Token, model.Password).Result;
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+            return NoContent();
         }
     }
 }

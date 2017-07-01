@@ -7,6 +7,7 @@ namespace SampleApi.Options
         public Application Application { get; set; }
         public ConnectionStrings ConnectionStrings { get; set; }
         public Jwt Jwt { get; set; }
+        public EmailProviders EmailProviders { get; set; }
     }
     public class Application
     {
@@ -25,5 +26,16 @@ namespace SampleApi.Options
         public int AccessTokenLifetime { get; set; }
         public int IdentityTokenLifetime { get; set; }
         public int RefreshTokenLifetime { get; set; }
+    }
+    public class EmailProviders
+    {
+        public Mailgun Mailgun { get; set; }
+    }
+    public class Mailgun
+    {
+        public string Domain { get; set; }
+        public string ApiKey { get; set; }
+        public string FromName { get; set; }
+        public string FromAddress { get; set; }
     }
 }
