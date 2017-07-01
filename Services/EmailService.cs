@@ -30,7 +30,9 @@ namespace SampleApi.Services
             .Subject(subject)
             .Body(message, true);
             var response = await email.SendAsync();
-            var a = 10;
+            if(!response.Successful) {
+                // take an action
+            }
         }
     }
 }
