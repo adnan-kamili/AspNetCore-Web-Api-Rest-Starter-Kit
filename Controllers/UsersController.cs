@@ -38,9 +38,11 @@ namespace SampleApi.Controllers
             if (roles.Length > 0)
             {
                 var roleIds = new List<string>();
-                foreach (string roleName in roles){
+                foreach (string roleName in roles)
+                {
                     var role = await repository.GetRoleManager().FindByNameAsync(roleName + repository.TenantId);
-                    if(role != null){
+                    if (role != null)
+                    {
                         roleIds.Add(role.Id);
                     }
                 }
@@ -83,25 +85,29 @@ namespace SampleApi.Controllers
                 Name = model.Name,
                 TenantId = repository.TenantId
             };
-            foreach (var roleId in model.Roles.Distinct())
+            if (model.Roles != null)
             {
-                var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
-                if (role == null)
+                foreach (var roleId in model.Roles.Distinct())
                 {
-                    ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
-                    return BadRequest(ModelState);
+                    var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
+                    if (role == null)
+                    {
+                        ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
+                        return BadRequest(ModelState);
+                    }
+                    else if (role.Name == "admin" + repository.TenantId)
+                    {
+                        ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
+                        return BadRequest(ModelState);
+                    }
+                    user.Roles.Add(new IdentityUserRole<string>
+                    {
+                        UserId = user.Id,
+                        RoleId = role.Id
+                    });
                 }
-                else if (role.Name == "admin" + repository.TenantId)
-                {
-                    ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
-                    return BadRequest(ModelState);
-                }
-                user.Roles.Add(new IdentityUserRole<string>
-                {
-                    UserId = user.Id,
-                    RoleId = role.Id
-                });
             }
+
             var result = await repository.GetUserManager().CreateAsync(user, model.Password);
             if (!result.Succeeded)
             {
@@ -136,7 +142,7 @@ namespace SampleApi.Controllers
             var rolesToRemove = new List<string>();
 
             // only non-admin  user roles can be updated
-            if (!HttpContext.User.IsInRole("admin"))
+            if (!HttpContext.User.IsInRole("admin") && model.Roles != null)
             {
                 foreach (var roleId in model.Roles)
                 {
@@ -183,8 +189,12 @@ namespace SampleApi.Controllers
                 }
                 return BadRequest(ModelState);
             }
-            await repository.GetUserManager().RemoveFromRolesAsync(user, rolesToRemove);
-            await repository.GetUserManager().AddToRolesAsync(user, rolesToAdd);
+            if (model.Roles != null)
+            {
+                await repository.GetUserManager().RemoveFromRolesAsync(user, rolesToRemove);
+                await repository.GetUserManager().AddToRolesAsync(user, rolesToAdd);
+            }
+
             return NoContent();
         }
 
