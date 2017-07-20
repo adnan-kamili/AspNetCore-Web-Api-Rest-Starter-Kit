@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using AspNet.Security.OpenIdConnect.Primitives;
 using Swashbuckle.AspNetCore.Swagger;
+using Serilog;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -34,6 +35,11 @@ namespace SampleApi
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName.ToLower()}.json", optional: true)
                 .AddEnvironmentVariables();
+            // Log.Logger = new LoggerConfiguration()
+            //     //.ReadFrom.Configuration(configuration)
+            //     .Enrich.FromLogContext()
+            //     .WriteTo.LiterateConsole()
+            //     .CreateLogger();
             Configuration = builder.Build();
         }
 
@@ -143,6 +149,7 @@ namespace SampleApi
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
+            loggerfactory.UseSerilog();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
