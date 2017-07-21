@@ -14,13 +14,14 @@ using AspNet.Security.OpenIdConnect.Primitives;
 using Swashbuckle.AspNetCore.Swagger;
 using Serilog;
 
+
 using SampleApi.Models;
 using SampleApi.Repository;
 using SampleApi.Options;
 using SampleApi.Filters;
 using SampleApi.Policies;
 using SampleApi.Services;
-
+using Serilog.
 
 namespace SampleApi
 {
@@ -30,17 +31,20 @@ namespace SampleApi
 
         public Startup(IHostingEnvironment env)
         {
-            var builder = new ConfigurationBuilder()
+            var configuration = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName.ToLower()}.json", optional: true)
                 .AddEnvironmentVariables();
-            // Log.Logger = new LoggerConfiguration()
-            //     //.ReadFrom.Configuration(configuration)
-            //     .Enrich.FromLogContext()
-            //     .WriteTo.LiterateConsole()
-            //     .CreateLogger();
-            Configuration = builder.Build();
+            Configuration = configuration.Build();
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .Enrich.FromLogContext()
+                .WriteTo.LiterateConsole()
+                .WriteTo.RollingFile("Logs/log-{Date}.log")
+                .CreateLogger();
+
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -147,9 +151,9 @@ namespace SampleApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IRepository repository)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-            loggerfactory.UseSerilog();
+            //loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            //loggerFactory.AddDebug();
+            loggerFactory.AddSerilog();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
