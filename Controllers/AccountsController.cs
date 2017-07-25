@@ -41,16 +41,6 @@ namespace SampleApi.Controllers
             };
             _repository.Create(tenant);
             await _repository.SaveAsync();
-            var adminRole = new ApplicationRole("admin", tenant.Id, "Admin user with all the permissions");
-            var roleCreationResult = await _repository.GetRoleManager().CreateAsync(adminRole);
-            if (!roleCreationResult.Succeeded)
-            {
-                foreach (var error in roleCreationResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                return BadRequest(ModelState);
-            }
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -65,6 +55,20 @@ namespace SampleApi.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
+                _repository.Delete(tenant);
+                await _repository.SaveAsync();
+                return BadRequest(ModelState);
+            }
+            var adminRole = new ApplicationRole("admin", tenant.Id, "Admin user with all the permissions");
+            var roleCreationResult = await _repository.GetRoleManager().CreateAsync(adminRole);
+            if (!roleCreationResult.Succeeded)
+            {
+                foreach (var error in roleCreationResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                _repository.Delete(tenant);
+                await _repository.SaveAsync();
                 return BadRequest(ModelState);
             }
             await _repository.GetUserManager().AddToRoleAsync(user, adminRole.Name);
