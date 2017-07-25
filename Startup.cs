@@ -14,14 +14,12 @@ using AspNet.Security.OpenIdConnect.Primitives;
 using Swashbuckle.AspNetCore.Swagger;
 using Serilog;
 
-
 using SampleApi.Models;
 using SampleApi.Repository;
 using SampleApi.Options;
 using SampleApi.Filters;
 using SampleApi.Policies;
 using SampleApi.Services;
-using Serilog.
 
 namespace SampleApi
 {
@@ -39,12 +37,9 @@ namespace SampleApi
             Configuration = configuration.Build();
 
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
+                .ReadFrom.Configuration(Configuration)
                 .Enrich.FromLogContext()
-                .WriteTo.LiterateConsole()
-                .WriteTo.RollingFile("Logs/log-{Date}.log")
                 .CreateLogger();
-
         }
 
         public void ConfigureServices(IServiceCollection services)
