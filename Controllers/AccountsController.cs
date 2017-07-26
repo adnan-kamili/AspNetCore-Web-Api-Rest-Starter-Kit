@@ -68,6 +68,7 @@ namespace SampleApi.Controllers
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
                 _repository.Delete(tenant);
+                await _repository.GetUserManager().DeleteAsync(user);
                 await _repository.SaveAsync();
                 return BadRequest(ModelState);
             }
