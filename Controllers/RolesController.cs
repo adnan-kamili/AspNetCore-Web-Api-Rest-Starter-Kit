@@ -11,8 +11,8 @@ using SampleApi.Repository;
 using SampleApi.Models;
 using SampleApi.Policies;
 using SampleApi.Filters;
-using SampleApi.Models.ViewModels;
-using SampleApi.Models.Dtos;
+using SampleApi.ViewModels;
+using SampleApi.Dtos;
 
 namespace SampleApi.Controllers
 {

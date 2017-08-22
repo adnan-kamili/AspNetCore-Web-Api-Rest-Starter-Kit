@@ -10,10 +10,10 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 using SampleApi.Models;
 using SampleApi.Repository;
-using SampleApi.Models.Dtos;
+using SampleApi.Dtos;
 using SampleApi.Policies;
 using SampleApi.Filters;
-using SampleApi.Models.ViewModels;
+using SampleApi.ViewModels;
 
 namespace SampleApi.Controllers
 {

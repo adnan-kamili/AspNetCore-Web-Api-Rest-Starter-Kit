@@ -1,9 +1,12 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace SampleApi.Models.ViewModels
+namespace SampleApi.ViewModels
 {
-    public class ResetPasswordViewModel
+    public class UserViewModel
     {
+        [Required]
+        public string Name { get; set; }
         [Required]
         [EmailAddress]
         public string Email { get; set; }
@@ -11,6 +14,7 @@ namespace SampleApi.Models.ViewModels
         [MinLength(8)]
         public string Password { get; set; }
         [Required]
-        public string Token { get; set; }
+        public List<string> Roles { get; set; }
+
     }
 }

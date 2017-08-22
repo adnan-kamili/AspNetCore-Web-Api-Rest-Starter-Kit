@@ -1,6 +1,6 @@
 using System;
 
-namespace SampleApi.Models.Dtos
+namespace SampleApi.Dtos
 {
     public interface IDto
     {

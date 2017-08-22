@@ -2,8 +2,9 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Collections.Generic;
+using SampleApi.Models;
 
-namespace SampleApi.Models.Dtos
+namespace SampleApi.Dtos
 {
     public class RoleDto : BaseDto
     {

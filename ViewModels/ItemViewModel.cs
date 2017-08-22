@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SampleApi.Models.ViewModels
+namespace SampleApi.ViewModels
 {
     public class ItemViewModel
     {

@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 
 using SampleApi.Repository;
 using SampleApi.Models;
-using SampleApi.Models.Dtos;
-using SampleApi.Models.ViewModels;
+using SampleApi.Dtos;
+using SampleApi.ViewModels;
 using SampleApi.Policies;
 using SampleApi.Filters;
 

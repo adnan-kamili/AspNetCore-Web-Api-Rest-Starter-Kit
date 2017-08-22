@@ -1,7 +1,8 @@
 using System;
 using System.Linq.Expressions;
+using SampleApi.Models;
 
-namespace SampleApi.Models.Dtos
+namespace SampleApi.Dtos
 {
     public class ItemDto : BaseDto
     {

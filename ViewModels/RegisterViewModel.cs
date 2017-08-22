@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace SampleApi.Models.ViewModels
+namespace SampleApi.ViewModels
 {
-    public class UserViewModel
+    public class RegisterViewModel
     {
         [Required]
         public string Name { get; set; }
@@ -13,8 +12,7 @@ namespace SampleApi.Models.ViewModels
         [Required]
         [MinLength(8)]
         public string Password { get; set; }
-        [Required]
-        public List<string> Roles { get; set; }
 
+        public string Company { get; set; }
     }
 }

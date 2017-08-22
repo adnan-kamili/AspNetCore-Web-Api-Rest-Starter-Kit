@@ -6,7 +6,7 @@ using SampleApi.Repository;
 using Microsoft.AspNetCore.Authorization;
 
 using SampleApi.Models;
-using SampleApi.Models.ViewModels;
+using SampleApi.ViewModels;
 using SampleApi.Services;
 
 namespace SampleApi.Controllers
