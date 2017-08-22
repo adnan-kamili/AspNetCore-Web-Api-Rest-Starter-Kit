@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore;
+using System.Net;
+
 
 namespace SampleApi
 {
@@ -8,17 +9,15 @@ namespace SampleApi
     {
         public static void Main(string[] args)
         {
-            var config = new ConfigurationBuilder()
-                .AddCommandLine(args)
-                .AddEnvironmentVariables(prefix: "ASPNETCORE_")
-                .AddJsonFile("hosting.json")
-                .Build();
-            var host = new WebHostBuilder()
-                .UseConfiguration(config)
-                .UseKestrel()
-                .UseStartup<Startup>()
-                .Build();
-            host.Run();
+            BuildWebHost(args).Run();
         }
+        public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .UseKestrel(options =>
+                {
+                    options.Listen(IPAddress.Any, 5000);
+                })
+                .Build();
     }
 }
