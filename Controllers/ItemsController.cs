@@ -11,7 +11,7 @@ using SampleApi.Filters;
 
 namespace SampleApi.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("~/v1/items")]
     public class ItemsController : BaseController
     {
         public ItemsController(IRepository repository) : base(repository)
@@ -22,17 +22,13 @@ namespace SampleApi.Controllers
         [PaginationHeadersFilter]
         [HttpGet]
         [Authorize(Policy = PermissionClaims.ReadItem)]
-        public async Task<IActionResult> GetList([FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
+        public async Task<IActionResult> GetList(PaginationViewModel pagination)
         {
-            page = (page < firstPage) ? firstPage : page;
-            limit = (limit < minLimit) ? minLimit : limit;
-            limit = (limit > maxLimit) ? maxLimit : limit;
-            int skip = (page - 1) * limit;
             int count = await repository.GetCountAsync<Item>(null);
             HttpContext.Items["count"] = count.ToString();
-            HttpContext.Items["page"] = page.ToString();
-            HttpContext.Items["limit"] = limit.ToString();
-            var entityList = await repository.GetAllAsync<Item, ItemDto>(ItemDto.SelectProperties, null, null, skip, limit);
+            HttpContext.Items["page"] = pagination.Page.ToString();
+            HttpContext.Items["limit"] = pagination.Limit.ToString();
+            var entityList = await repository.GetAllAsync<Item, ItemDto>(ItemDto.SelectProperties, null, null, pagination.Skip, pagination.Limit);
             return Ok(entityList);
         }
 

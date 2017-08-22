@@ -27,17 +27,13 @@ namespace SampleApi.Controllers
         [PaginationHeadersFilter]
         [HttpGet]
         [Authorize(Policy = PermissionClaims.ReadRoles)]
-        public async Task<IActionResult> GetList([FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
+        public async Task<IActionResult> GetList(PaginationViewModel pagination)
         {
-            page = (page < firstPage) ? firstPage : page;
-            limit = (limit < minLimit) ? minLimit : limit;
-            limit = (limit > maxLimit) ? maxLimit : limit;
-            int skip = (page - 1) * limit;
             int count = await repository.GetCountAsync<Role>(null);
             HttpContext.Items["count"] = count.ToString();
-            HttpContext.Items["page"] = page.ToString();
-            HttpContext.Items["limit"] = limit.ToString();
-            var roleList = await repository.GetAllAsync<Role, RoleDto>(RoleDto.SelectProperties, null, _includeProperties, skip, limit);
+            HttpContext.Items["page"] = pagination.Page.ToString();
+            HttpContext.Items["limit"] = pagination.Limit.ToString();
+            var roleList = await repository.GetAllAsync<Role, RoleDto>(RoleDto.SelectProperties, null, _includeProperties, pagination.Skip, pagination.Limit);
             return Ok(roleList);
         }
 

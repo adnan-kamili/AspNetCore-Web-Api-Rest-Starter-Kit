@@ -28,12 +28,8 @@ namespace SampleApi.Controllers
         [PaginationHeadersFilter]
         [HttpGet]
         [Authorize(Policy = PermissionClaims.ReadUsers)]
-        public async Task<IActionResult> GetList([FromQuery] string[] roles, [FromQuery] int page = firstPage, [FromQuery] int limit = minLimit)
+        public async Task<IActionResult> GetList([FromQuery] string[] roles, PaginationViewModel pagination)
         {
-            page = (page < firstPage) ? firstPage : page;
-            limit = (limit < minLimit) ? minLimit : limit;
-            limit = (limit > maxLimit) ? maxLimit : limit;
-            int skip = (page - 1) * limit;
             Expression<Func<User, bool>> filter = null;
             if (roles.Length > 0)
             {
@@ -51,9 +47,9 @@ namespace SampleApi.Controllers
             }
             int count = await repository.GetCountAsync<User>(filter);
             HttpContext.Items["count"] = count.ToString();
-            HttpContext.Items["page"] = page.ToString();
-            HttpContext.Items["limit"] = limit.ToString();
-            var userList = await repository.GetAsync<User, UserDto>(UserDto.SelectProperties, filter, null, null, skip, limit);
+            HttpContext.Items["page"] = pagination.Page.ToString();
+            HttpContext.Items["limit"] = pagination.Limit.ToString();
+            var userList = await repository.GetAsync<User, UserDto>(UserDto.SelectProperties, filter, null, null, pagination.Skip, pagination.Limit);
             return Ok(userList);
         }
 
