@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace SampleApi.Models.Dtos
 {
-    public class ApplicationRoleDto : BaseDto
+    public class RoleDto : BaseDto
     {
         public string Name { get; set; }
         public string Description { get; set; }
         public List<string> Claims { get; set; }
 
-        public static Expression<Func<ApplicationRole, ApplicationRoleDto>> SelectProperties = (role) => new ApplicationRoleDto
+        public static Expression<Func<Role, RoleDto>> SelectProperties = (role) => new RoleDto
         {
             Id = role.Id,
             Name = role.Name.Replace(role.TenantId, string.Empty),

@@ -57,7 +57,7 @@ namespace SampleApi
             services.AddScoped(typeof(IRepository), typeof(EFRepository<ApplicationDbContext>));
 
             // Add identity
-            services.AddIdentity<ApplicationUser, ApplicationRole>()
+            services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 

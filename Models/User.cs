@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace SampleApi.Models
 {
-    public class ApplicationUser : IdentityUser, IEntity, ITenantEntity
+    public class User : IdentityUser, IEntity, ITenantEntity
     {
         [Required]
         public string Name { get; set; }

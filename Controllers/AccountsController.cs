@@ -41,7 +41,7 @@ namespace SampleApi.Controllers
             };
             _repository.Create(tenant);
             await _repository.SaveAsync();
-            var user = new ApplicationUser
+            var user = new User
             {
                 UserName = model.Email,
                 Email = model.Email,
@@ -59,7 +59,7 @@ namespace SampleApi.Controllers
                 await _repository.SaveAsync();
                 return BadRequest(ModelState);
             }
-            var adminRole = new ApplicationRole("admin", tenant.Id, "Admin user with all the permissions");
+            var adminRole = new Role("admin", tenant.Id, "Admin user with all the permissions");
             var roleCreationResult = await _repository.GetRoleManager().CreateAsync(adminRole);
             if (!roleCreationResult.Succeeded)
             {
@@ -80,7 +80,7 @@ namespace SampleApi.Controllers
         [HttpPut("password")]
         public async Task<IActionResult> SendPasswordResetLink([FromBody] UserEmailViewModel model)
         {
-            ApplicationUser user = await _repository.GetUserManager().FindByEmailAsync(model.Email);
+            User user = await _repository.GetUserManager().FindByEmailAsync(model.Email);
             if (user != null)
             {
                 var token = _repository.GetUserManager().GeneratePasswordResetTokenAsync(user).Result;
@@ -95,7 +95,7 @@ namespace SampleApi.Controllers
         [HttpPut("password-reset")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordViewModel model)
         {
-            ApplicationUser user = await _repository.GetUserManager().FindByEmailAsync(model.Email);
+            User user = await _repository.GetUserManager().FindByEmailAsync(model.Email);
             if (user == null)
             {
                 ModelState.AddModelError("email", "Email does not exist");

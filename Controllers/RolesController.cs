@@ -33,11 +33,11 @@ namespace SampleApi.Controllers
             limit = (limit < minLimit) ? minLimit : limit;
             limit = (limit > maxLimit) ? maxLimit : limit;
             int skip = (page - 1) * limit;
-            int count = await repository.GetCountAsync<ApplicationRole>(null);
+            int count = await repository.GetCountAsync<Role>(null);
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
-            var roleList = await repository.GetAllAsync<ApplicationRole, ApplicationRoleDto>(ApplicationRoleDto.SelectProperties, null, _includeProperties, skip, limit);
+            var roleList = await repository.GetAllAsync<Role, RoleDto>(RoleDto.SelectProperties, null, _includeProperties, skip, limit);
             return Ok(roleList);
         }
 
@@ -45,7 +45,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadRole)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            var role = await repository.GetByIdAsync<ApplicationRole, ApplicationRoleDto>(id, ApplicationRoleDto.SelectProperties, _includeProperties);
+            var role = await repository.GetByIdAsync<Role, RoleDto>(id, RoleDto.SelectProperties, _includeProperties);
             if (role == null)
             {
                 return NotFound(new { message = "Role with id '" + id + "' does not exist!" });
@@ -75,7 +75,7 @@ namespace SampleApi.Controllers
                     }
                 }
             }
-            var role = new ApplicationRole(model.Name, repository.TenantId, model.Description);
+            var role = new Role(model.Name, repository.TenantId, model.Description);
             var roleCreationResult = await repository.GetRoleManager().CreateAsync(role);
             if (!roleCreationResult.Succeeded)
             {
@@ -99,7 +99,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.UpdateRole)]
         public async Task<IActionResult> Update([FromRoute] string id, [FromBody] RoleViewModel model)
         {
-            ApplicationRole role = await repository.GetByIdAsync<ApplicationRole>(id);
+            Role role = await repository.GetByIdAsync<Role>(id);
             if (role == null)
             {
                 return NotFound(new { message = "Role does not exist!" });
@@ -167,7 +167,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.DeleteRole)]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            ApplicationRole role = await repository.GetByIdAsync<ApplicationRole>(id);
+            Role role = await repository.GetByIdAsync<Role>(id);
             if (role == null)
             {
                 return NotFound(new { message = "Role does not exist!" });
@@ -177,8 +177,8 @@ namespace SampleApi.Controllers
                 // admin role can't be deleted
                 return Forbid();
             }
-            Expression<Func<ApplicationUser, bool>> filter = user => user.Roles.Select(r => r.RoleId).Any(roleId => roleId == role.Id);
-            var userList = await repository.GetAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, filter, null, null);
+            Expression<Func<User, bool>> filter = user => user.Roles.Select(r => r.RoleId).Any(roleId => roleId == role.Id);
+            var userList = await repository.GetAsync<User, UserDto>(UserDto.SelectProperties, filter, null, null);
             if (userList.ToList().Count > 0)
             {
                 this.HttpContext.Response.StatusCode = StatusCodes.Status409Conflict;

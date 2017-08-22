@@ -5,17 +5,17 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace SampleApi.Models
 {
-    public class ApplicationRole : IdentityRole, IEntity, ITenantEntity
+    public class Role : IdentityRole, IEntity, ITenantEntity
     {
-        public ApplicationRole()
+        public Role()
         {
         }
-        public ApplicationRole(string name, string tenantId)
+        public Role(string name, string tenantId)
             : base(name+tenantId)
         {
             this.TenantId = tenantId;
         }
-        public ApplicationRole(string name, string tenantId, string description)
+        public Role(string name, string tenantId, string description)
             : base(name+tenantId)
         {
             this.TenantId = tenantId;

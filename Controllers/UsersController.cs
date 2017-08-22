@@ -34,7 +34,7 @@ namespace SampleApi.Controllers
             limit = (limit < minLimit) ? minLimit : limit;
             limit = (limit > maxLimit) ? maxLimit : limit;
             int skip = (page - 1) * limit;
-            Expression<Func<ApplicationUser, bool>> filter = null;
+            Expression<Func<User, bool>> filter = null;
             if (roles.Length > 0)
             {
                 var roleIds = new List<string>();
@@ -49,11 +49,11 @@ namespace SampleApi.Controllers
                 // get users by given roles
                 filter = user => user.Roles.Select(role => role.RoleId).Any(roleId => roleIds.Contains(roleId));
             }
-            int count = await repository.GetCountAsync<ApplicationUser>(filter);
+            int count = await repository.GetCountAsync<User>(filter);
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = page.ToString();
             HttpContext.Items["limit"] = limit.ToString();
-            var userList = await repository.GetAsync<ApplicationUser, ApplicationUserDto>(ApplicationUserDto.SelectProperties, filter, null, null, skip, limit);
+            var userList = await repository.GetAsync<User, UserDto>(UserDto.SelectProperties, filter, null, null, skip, limit);
             return Ok(userList);
         }
 
@@ -61,7 +61,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadUser)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            var user = await repository.GetByIdAsync<ApplicationUser, ApplicationUserDto>(id, ApplicationUserDto.SelectProperties, _includeProperties);
+            var user = await repository.GetByIdAsync<User, UserDto>(id, UserDto.SelectProperties, _includeProperties);
             if (user != null)
             {
                 return Ok(user);
@@ -78,7 +78,7 @@ namespace SampleApi.Controllers
                 ModelState.AddModelError("Email", "Email is already in use");
                 return BadRequest(ModelState);
             }
-            var user = new ApplicationUser
+            var user = new User
             {
                 UserName = model.Email,
                 Email = model.Email,
@@ -89,7 +89,7 @@ namespace SampleApi.Controllers
             {
                 foreach (var roleId in model.Roles.Distinct())
                 {
-                    var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
+                    var role = await repository.GetByIdAsync<Role>(roleId);
                     if (role == null)
                     {
                         ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
@@ -125,7 +125,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.UpdateUser)]
         public async Task<IActionResult> Update([FromRoute] string id, [FromBody] UserViewModel model)
         {
-            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id, _includeProperties);
+            User user = await repository.GetByIdAsync<User>(id, _includeProperties);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
@@ -146,7 +146,7 @@ namespace SampleApi.Controllers
             {
                 foreach (var roleId in model.Roles)
                 {
-                    var role = await repository.GetByIdAsync<ApplicationRole>(roleId);
+                    var role = await repository.GetByIdAsync<Role>(roleId);
                     if (role == null)
                     {
                         ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
@@ -168,7 +168,7 @@ namespace SampleApi.Controllers
                 {
                     if (model.Roles.Contains(userRole.RoleId) == false)
                     {
-                        var role = await repository.GetByIdAsync<ApplicationRole>(userRole.RoleId);
+                        var role = await repository.GetByIdAsync<Role>(userRole.RoleId);
                         // ensure stored role names are unique across tenants
                         rolesToRemove.Add(role.Name + repository.TenantId);
                     }
@@ -202,7 +202,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.UpdateUser)]
         public async Task<IActionResult> UpdatePassword([FromRoute] string id, [FromBody] UserPasswordViewModel model)
         {
-            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id, _includeProperties);
+            User user = await repository.GetByIdAsync<User>(id, _includeProperties);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
@@ -233,7 +233,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.UpdateUser)]
         public async Task<IActionResult> UpdateEmail([FromRoute] string id, [FromBody] UserEmailViewModel model)
         {
-            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id, _includeProperties);
+            User user = await repository.GetByIdAsync<User>(id, _includeProperties);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
@@ -272,7 +272,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.DeleteUser)]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            ApplicationUser user = await repository.GetByIdAsync<ApplicationUser>(id);
+            User user = await repository.GetByIdAsync<User>(id);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });

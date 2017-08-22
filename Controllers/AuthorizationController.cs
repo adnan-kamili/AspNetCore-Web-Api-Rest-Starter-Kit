@@ -147,7 +147,7 @@ namespace SampleApi.Controllers
             });
         }
 
-        private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, ApplicationUser user, AuthenticationProperties properties = null)
+        private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, User user, AuthenticationProperties properties = null)
         {
             var identity = new ClaimsIdentity(
                 OpenIdConnectServerDefaults.AuthenticationScheme,

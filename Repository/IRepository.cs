@@ -85,10 +85,10 @@ namespace SampleApi.Repository
 
         void EnsureDatabaseCreated();
 
-        UserManager<ApplicationUser> GetUserManager();
+        UserManager<User> GetUserManager();
 
-        SignInManager<ApplicationUser> GetSignInManager();
+        SignInManager<User> GetSignInManager();
 
-        RoleManager<ApplicationRole> GetRoleManager();
+        RoleManager<Role> GetRoleManager();
     }
 }
