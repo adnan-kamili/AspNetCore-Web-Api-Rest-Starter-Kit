@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 using SampleApi.Models;
 
 namespace SampleApi.Dtos

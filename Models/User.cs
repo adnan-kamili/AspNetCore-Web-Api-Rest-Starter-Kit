@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace SampleApi.Models
@@ -24,5 +26,7 @@ namespace SampleApi.Models
 
         [DataType(DataType.DateTime)]
         public DateTime? ModifiedAt { get; set; }
+
+        public virtual ICollection<Role> Roles { get; } = new List<Role>();
     }
 }

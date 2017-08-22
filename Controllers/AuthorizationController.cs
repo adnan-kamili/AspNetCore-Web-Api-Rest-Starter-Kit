@@ -5,12 +5,13 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
 using AspNet.Security.OpenIdConnect.Server;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 
 using OpenIddict.Core;
 using OpenIddict.Models;
@@ -109,8 +110,7 @@ namespace SampleApi.Controllers
             else if (request.IsRefreshTokenGrantType())
             {
                 // Retrieve the claims principal stored in the refresh token.
-                var info = await HttpContext.Authentication.GetAuthenticateInfoAsync(
-                    OpenIdConnectServerDefaults.AuthenticationScheme);
+                var info = await HttpContext.AuthenticateAsync(OpenIdConnectServerDefaults.AuthenticationScheme);
 
                 // Retrieve the user profile corresponding to the refresh token.
                 var user = await _repository.GetUserManager().GetUserAsync(info.Principal);
@@ -147,7 +147,7 @@ namespace SampleApi.Controllers
             });
         }
 
-        private async Task<AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, User user, AuthenticationProperties properties = null)
+        private async Task<Microsoft.AspNetCore.Authentication.AuthenticationTicket> CreateTicketAsync(OpenIdConnectRequest request, User user, AuthenticationProperties properties = null)
         {
             var identity = new ClaimsIdentity(
                 OpenIdConnectServerDefaults.AuthenticationScheme,
@@ -187,7 +187,7 @@ namespace SampleApi.Controllers
             }
 
             // Create a new authentication ticket holding the user identity.
-            var ticket = new AuthenticationTicket(
+            var ticket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(
                 new ClaimsPrincipal(identity), null,
                 OpenIdConnectServerDefaults.AuthenticationScheme);
 

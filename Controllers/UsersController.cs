@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -43,7 +43,7 @@ namespace SampleApi.Controllers
                     }
                 }
                 // get users by given roles
-                filter = user => user.Roles.Select(role => role.RoleId).Any(roleId => roleIds.Contains(roleId));
+                filter = user => user.Roles.Select(role => role.Id).Any(roleId => roleIds.Contains(roleId));
             }
             int count = await repository.GetCountAsync<User>(filter);
             HttpContext.Items["count"] = count.ToString();
@@ -96,11 +96,7 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
                         return BadRequest(ModelState);
                     }
-                    user.Roles.Add(new IdentityUserRole<string>
-                    {
-                        UserId = user.Id,
-                        RoleId = role.Id
-                    });
+                    user.Roles.Add(role);
                 }
             }
 
@@ -153,7 +149,7 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
                         return BadRequest(ModelState);
                     }
-                    if (user.Roles.Select(r => r.RoleId == roleId) != null)
+                    if (user.Roles.Select(r => r.Id == roleId) != null)
                     {
                         // ensure stored role names are unique across tenants
                         rolesToAdd.Add(role.Name + repository.TenantId);
@@ -162,9 +158,9 @@ namespace SampleApi.Controllers
                 }
                 foreach (var userRole in user.Roles)
                 {
-                    if (model.Roles.Contains(userRole.RoleId) == false)
+                    if (model.Roles.Contains(userRole.Id) == false)
                     {
-                        var role = await repository.GetByIdAsync<Role>(userRole.RoleId);
+                        var role = await repository.GetByIdAsync<Role>(userRole.Id);
                         // ensure stored role names are unique across tenants
                         rolesToRemove.Add(role.Name + repository.TenantId);
                     }

@@ -9,9 +9,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using AspNet.Security.OpenIdConnect.Primitives;
 using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
 
 using SampleApi.Models;
@@ -101,10 +104,6 @@ namespace SampleApi
                .AddApiExplorer();
 
 
-
-            // Add authentication
-            services.AddAuthentication();
-
             // Configure Identity to use the same JWT claims as OpenIddict 
             services.Configure<IdentityOptions>(options =>
             {
@@ -117,21 +116,48 @@ namespace SampleApi
                 options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
 
+            // Add authentication
+            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                // options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.Authority = "http://localhost:30940/";
+                options.Audience = "resource-server";
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
+                    ValidateIssuer = true,
+                    ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
+                    ValidateAudience = true,
+                    ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
+                    ValidateLifetime = true
+                };
+            });
             // Add OpenId Connect/OAuth2
-            services.AddOpenIddict()
-                .AddEntityFrameworkCoreStores<ApplicationDbContext>()
-                .AddMvcBinders()
-                .EnableTokenEndpoint("/connect/token")
-                .AllowPasswordFlow()
-                .AllowRefreshTokenFlow()
-                .UseJsonWebTokens()
-                // You can disable the HTTPS requirement during development or if behind a HTTPS reverse proxy
-                .DisableHttpsRequirement()
-                .AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.Get<AppOptions>().Jwt.SecretKey)));
-            // Register a new ephemeral key, that is discarded when the application
-            // shuts down. Tokens signed using this key are automatically invalidated.
-            // To be used during development
-            //.AddEphemeralSigningKey();
+            services.AddOpenIddict(options =>
+            {
+                options.AddEntityFrameworkCoreStores<ApplicationDbContext>();
+                options.AddMvcBinders();
+                options.EnableAuthorizationEndpoint("/connect/authorize")
+                       //.EnableLogoutEndpoint("/connect/logout")
+                       .EnableTokenEndpoint("/connect/token");
+                //.EnableUserinfoEndpoint("/api/userinfo");
+                options.AllowAuthorizationCodeFlow()
+                       .AllowPasswordFlow()
+                       .AllowRefreshTokenFlow();
+                // Make the "client_id" parameter mandatory when sending a token request.
+                // options.RequireClientIdentification();
+                // During development, you can disable the HTTPS requirement.
+                options.DisableHttpsRequirement();
+                options.UseJsonWebTokens();
+                options.AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.Get<AppOptions>().Jwt.SecretKey)));
+            });
 
             // Add Swagger generator
             services.AddSwaggerGen(options =>
@@ -154,26 +180,7 @@ namespace SampleApi
                 app.UseDeveloperExceptionPage();
             }
 
-            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
-            app.UseJwtBearerAuthentication(new JwtBearerOptions
-            {
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true,
-                RequireHttpsMetadata = env.IsProduction(), // during development
-                TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
-                    ValidateIssuer = true,
-                    ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
-                    ValidateAudience = true,
-                    ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
-                    ValidateLifetime = true,
-                }
-            });
-
-            // Add OpedId Connect middleware
-            app.UseOpenIddict();
+            app.UseAuthentication();
 
             // Add CORS middleware
             app.UseCors(builder =>
