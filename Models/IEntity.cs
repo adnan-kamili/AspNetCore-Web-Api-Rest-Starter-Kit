@@ -6,6 +6,6 @@ namespace  SampleApi.Models
     {
         string Id { get; set; }
         DateTime CreatedAt { get; set; }
-        DateTime? ModifiedAt { get; set; }
+        DateTime ModifiedAt { get; set; }
     }
 }

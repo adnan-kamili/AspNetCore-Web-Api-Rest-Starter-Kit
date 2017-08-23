@@ -174,6 +174,7 @@ namespace SampleApi.Repository
         public virtual void Create<TEntity>(TEntity entity) where TEntity : class, IEntity
         {
             entity.CreatedAt = DateTime.UtcNow;
+            entity.ModifiedAt = DateTime.UtcNow;
 
             if (entity is ITenantEntity)
             {
