@@ -11,11 +11,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
+using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
+using AspNet.Security.OpenIdConnect.Server;
 using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
+using OpenIddict.Core;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -116,29 +119,8 @@ namespace SampleApi
                 options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
 
-            // Add authentication
-            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
-            services.AddAuthentication(options =>
-            {
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                // options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.Authority = "http://localhost:30940/";
-                options.Audience = "resource-server";
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
-                    ValidateIssuer = true,
-                    ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
-                    ValidateAudience = true,
-                    ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
-                    ValidateLifetime = true
-                };
-            });
+            services.AddDistributedMemoryCache();
+
             // Add OpenId Connect/OAuth2
             services.AddOpenIddict(options =>
             {
@@ -147,17 +129,38 @@ namespace SampleApi
                 options.EnableAuthorizationEndpoint("/connect/authorize")
                        //.EnableLogoutEndpoint("/connect/logout")
                        .EnableTokenEndpoint("/connect/token");
-                //.EnableUserinfoEndpoint("/api/userinfo");
+                        //.EnableUserinfoEndpoint("/api/userinfo");
                 options.AllowAuthorizationCodeFlow()
                        .AllowPasswordFlow()
                        .AllowRefreshTokenFlow();
                 // Make the "client_id" parameter mandatory when sending a token request.
                 // options.RequireClientIdentification();
+                options.EnableRequestCaching();
                 // During development, you can disable the HTTPS requirement.
                 options.DisableHttpsRequirement();
                 options.UseJsonWebTokens();
                 options.AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.Get<AppOptions>().Jwt.SecretKey)));
             });
+
+            // Add authentication
+            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
+            services.AddAuthentication()
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "http://localhost:30940/";
+                    options.Audience = "resource-server";
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
+                        ValidateIssuer = true,
+                        ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
+                        ValidateAudience = true,
+                        ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
+                        ValidateLifetime = true
+                    };
+                });
 
             // Add Swagger generator
             services.AddSwaggerGen(options =>
