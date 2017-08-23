@@ -143,21 +143,28 @@ namespace SampleApi
             });
 
             // Add authentication
+            //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            //JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
             var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
-            services.AddAuthentication()
+            services.AddAuthentication(options => {
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
                 .AddJwtBearer(options =>
                 {
-                    options.Authority = "http://localhost:30940/";
-                    options.Audience = "resource-server";
+                    // options.Authority = "http://localhost:30940/";
+                    // options.Audience = "resource-server";
                     options.RequireHttpsMetadata = false;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
+                        NameClaimType = OpenIdConnectConstants.Claims.Subject,
+                        RoleClaimType = OpenIdConnectConstants.Claims.Role,
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
-                        ValidateIssuer = true,
-                        ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
-                        ValidateAudience = true,
-                        ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
+                        //ValidateIssuer = true,
+                        // ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
+                        //ValidateAudience = true,
+                        // ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
                         ValidateLifetime = true
                     };
                 });
