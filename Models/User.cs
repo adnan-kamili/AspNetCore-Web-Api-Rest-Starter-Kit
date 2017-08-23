@@ -20,7 +20,7 @@ namespace SampleApi.Models
 
         [DataType(DataType.DateTime)]
         public DateTime ModifiedAt { get; set; }
-
-        public virtual ICollection<Role> Roles { get; } = new List<Role>();
+        
+        public virtual ICollection<IdentityUserRole<string>> Roles { get; set; }
     }
 }

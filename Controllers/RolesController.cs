@@ -173,7 +173,7 @@ namespace SampleApi.Controllers
                 // admin role can't be deleted
                 return Forbid();
             }
-            Expression<Func<User, bool>> filter = user => user.Roles.Select(r => r.Id).Any(roleId => roleId == role.Id);
+            Expression<Func<User, bool>> filter = user => user.Roles.Select(r => r.RoleId).Any(roleId => roleId == role.Id);
             var userList = await repository.GetAsync<User, UserDto>(UserDto.SelectProperties, filter, null, null);
             if (userList.ToList().Count > 0)
             {

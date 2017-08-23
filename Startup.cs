@@ -55,9 +55,9 @@ namespace SampleApi
             services.Configure<AppOptions>(Configuration);
 
             // Add database Context
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContextPool<ApplicationDbContext>(options =>
             {
-                options.UseMySql(Configuration.Get<AppOptions>().ConnectionStrings.MySqlProvider);
+                options.UseNpgsql(Configuration.Get<AppOptions>().ConnectionStrings.PostgreSqlProvider);
                 options.UseOpenIddict();
             });
             services.AddScoped(typeof(IRepository), typeof(EFRepository<ApplicationDbContext>));

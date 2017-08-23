@@ -43,7 +43,7 @@ namespace SampleApi.Controllers
                     }
                 }
                 // get users by given roles
-                filter = user => user.Roles.Select(role => role.Id).Any(roleId => roleIds.Contains(roleId));
+                filter = user => user.Roles.Select(role => role.RoleId).Any(roleId => roleIds.Contains(roleId));
             }
             int count = await repository.GetCountAsync<User>(filter);
             HttpContext.Items["count"] = count.ToString();
@@ -96,7 +96,10 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
                         return BadRequest(ModelState);
                     }
-                    user.Roles.Add(role);
+                    user.Roles.Add(new IdentityUserRole<string>(){
+                        RoleId = role.Id,
+                        UserId = user.Id
+                    });
                 }
             }
 
@@ -149,7 +152,7 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
                         return BadRequest(ModelState);
                     }
-                    if (user.Roles.Select(r => r.Id == roleId) != null)
+                    if (user.Roles.Select(r => r.RoleId == roleId) != null)
                     {
                         // ensure stored role names are unique across tenants
                         rolesToAdd.Add(role.Name + repository.TenantId);
@@ -158,9 +161,9 @@ namespace SampleApi.Controllers
                 }
                 foreach (var userRole in user.Roles)
                 {
-                    if (model.Roles.Contains(userRole.Id) == false)
+                    if (model.Roles.Contains(userRole.RoleId) == false)
                     {
-                        var role = await repository.GetByIdAsync<Role>(userRole.Id);
+                        var role = await repository.GetByIdAsync<Role>(userRole.RoleId);
                         // ensure stored role names are unique across tenants
                         rolesToRemove.Add(role.Name + repository.TenantId);
                     }

@@ -17,6 +17,7 @@ namespace SampleApi.Options
     public class ConnectionStrings
     {
         public string MySqlProvider { get; set; }
+        public string PostgreSqlProvider { get; set; }
     }
     public class Jwt
     {

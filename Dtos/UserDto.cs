@@ -16,7 +16,7 @@ namespace SampleApi.Dtos
             Id = user.Id,
             Email = user.Email,
             Name = user.Name,
-            Roles = user.Roles.Select(role=> role.Name).ToList(),
+            Roles = user.Roles.Select(role=> role.RoleId).ToList(),
             CreatedAt = user.CreatedAt,
             ModifiedAt = user.ModifiedAt
         };

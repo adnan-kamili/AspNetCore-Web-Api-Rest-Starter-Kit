@@ -35,6 +35,6 @@ namespace SampleApi.Models
         [DataType(DataType.DateTime)]
         public DateTime ModifiedAt { get; set; }
 
-        public virtual ICollection<IdentityRoleClaim<string>> Claims { get; } = new List<IdentityRoleClaim<string>>();
+        public virtual ICollection<IdentityRoleClaim<string>> Claims { get; set;}
     }
 }
