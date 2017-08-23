@@ -18,7 +18,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
-using OpenIddict.Core;
+using System.IdentityModel.Tokens.Jwt;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -122,6 +122,7 @@ namespace SampleApi
             services.AddDistributedMemoryCache();
 
             // Add OpenId Connect/OAuth2
+            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
             services.AddOpenIddict(options =>
             {
                 options.AddEntityFrameworkCoreStores<ApplicationDbContext>();
@@ -129,7 +130,7 @@ namespace SampleApi
                 options.EnableAuthorizationEndpoint("/connect/authorize")
                        //.EnableLogoutEndpoint("/connect/logout")
                        .EnableTokenEndpoint("/connect/token");
-                        //.EnableUserinfoEndpoint("/api/userinfo");
+                //.EnableUserinfoEndpoint("/api/userinfo");
                 options.AllowAuthorizationCodeFlow()
                        .AllowPasswordFlow()
                        .AllowRefreshTokenFlow();
@@ -139,21 +140,22 @@ namespace SampleApi
                 // During development, you can disable the HTTPS requirement.
                 options.DisableHttpsRequirement();
                 options.UseJsonWebTokens();
-                options.AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.Get<AppOptions>().Jwt.SecretKey)));
+                options.AddSigningKey(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)));
             });
 
             // Add authentication
-            //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            //JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
-            var secretKey = Configuration.Get<AppOptions>().Jwt.SecretKey;
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
             services.AddAuthentication(options => {
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             })
+            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    // options.Authority = "http://localhost:30940/";
-                    // options.Audience = "resource-server";
+                    options.Authority = Configuration.Get<AppOptions>().Jwt.Authority;
+                    options.Audience = Configuration.Get<AppOptions>().Jwt.Audience;
                     options.RequireHttpsMetadata = false;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
@@ -161,10 +163,6 @@ namespace SampleApi
                         RoleClaimType = OpenIdConnectConstants.Claims.Role,
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
-                        //ValidateIssuer = true,
-                        // ValidIssuer = Configuration.Get<AppOptions>().Jwt.Authority,
-                        //ValidateAudience = true,
-                        // ValidAudiences = Configuration.Get<AppOptions>().Jwt.Audiences,
                         ValidateLifetime = true
                     };
                 });

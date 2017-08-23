@@ -16,7 +16,7 @@ namespace SampleApi
                 .UseStartup<Startup>()
                 .UseKestrel(options =>
                 {
-                    options.Listen(IPAddress.Any, 5000);
+                    options.Listen(IPAddress.Loopback, 5000);
                 })
                 .Build();
     }

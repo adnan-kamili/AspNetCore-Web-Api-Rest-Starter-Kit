@@ -21,6 +21,7 @@ namespace SampleApi.Options
     public class Jwt
     {
         public List<string> Audiences { get; set; }
+        public string Audience { get; set; }
         public string Authority { get; set; }
         public string SecretKey { get; set; }
         public int AccessTokenLifetime { get; set; }
