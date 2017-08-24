@@ -1,5 +1,6 @@
 using System;
 using System.Linq.Expressions;
+using AutoMapper;
 using SampleApi.Models;
 
 namespace SampleApi.Dtos
@@ -18,5 +19,6 @@ namespace SampleApi.Dtos
             CreatedAt = item.CreatedAt,
             ModifiedAt = item.ModifiedAt
         };
+        //public static Expression<Func<Item, ItemDto>> SelectProperties = (item) => Mapper.Map<Item, ItemDto>(item);
     }
 }

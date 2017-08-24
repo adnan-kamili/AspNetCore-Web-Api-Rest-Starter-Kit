@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 using SampleApi.Repository;
 using SampleApi.Models;
@@ -20,7 +21,7 @@ namespace SampleApi.Controllers
     public class RolesController : BaseController
     {
         private string[] _includeProperties = { "Claims" };
-        public RolesController(IRepository repository) : base(repository)
+        public RolesController(IRepository repository, IMapper mapper) : base(repository, mapper)
         {
         }
 
@@ -41,7 +42,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadRole)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            var role = await repository.GetByIdAsync<Role, RoleDto>(id, RoleDto.SelectProperties, _includeProperties);
+            Role role = null;//await repository.GetByIdAsync<Role, RoleDto>(id, RoleDto.SelectProperties, _includeProperties);
             if (role == null)
             {
                 return NotFound(new { message = "Role with id '" + id + "' does not exist!" });

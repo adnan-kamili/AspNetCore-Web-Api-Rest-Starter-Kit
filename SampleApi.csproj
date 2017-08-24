@@ -6,6 +6,8 @@
     <PackageId>SampleApi</PackageId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="6.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="3.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
     <PackageReference Include="AspNet.Security.OAuth.Validation" Version="2.0.0-*" />
     <PackageReference Include="OpenIddict" Version="2.0.0-*" />
@@ -21,7 +23,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="1.0.0" />
     <!-- <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.0.0-*" /> -->
     <PackageReference Include="FluentEmail.Mailgun" Version="2.1.0" />
-
   </ItemGroup>
   <ItemGroup>
     <!-- <DotNetCliToolReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="1.1.0" /> -->

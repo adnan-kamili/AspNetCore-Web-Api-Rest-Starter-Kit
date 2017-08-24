@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using AutoMapper;
 
 using SampleApi.Models;
 using SampleApi.Repository;
@@ -21,7 +22,7 @@ namespace SampleApi.Controllers
     public class UsersController : BaseController
     {
         private string[] _includeProperties = { "Roles" };
-        public UsersController(IRepository repository) : base(repository)
+        public UsersController(IRepository repository, IMapper mapper) : base(repository, mapper)
         {
         }
 
@@ -57,7 +58,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadUser)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            var user = await repository.GetByIdAsync<User, UserDto>(id, UserDto.SelectProperties, _includeProperties);
+            User user = null;//await repository.GetByIdAsync<User, UserDto>(id, UserDto.SelectProperties, _includeProperties);
             if (user != null)
             {
                 return Ok(user);

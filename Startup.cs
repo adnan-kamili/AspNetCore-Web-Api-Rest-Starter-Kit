@@ -19,8 +19,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
+using AutoMapper;
 
 using SampleApi.Models;
+using SampleApi.Dtos;
 using SampleApi.Repository;
 using SampleApi.Options;
 using SampleApi.Filters;
@@ -106,6 +108,10 @@ namespace SampleApi
                .AddCors()
                .AddApiExplorer();
 
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile(new AutoMapperProfile());
+            });
 
             // Configure Identity to use the same JWT claims as OpenIddict 
             services.Configure<IdentityOptions>(options =>
@@ -146,7 +152,8 @@ namespace SampleApi
             // Add authentication
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
-            services.AddAuthentication(options => {
+            services.AddAuthentication(options =>
+            {
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

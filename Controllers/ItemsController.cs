@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 using SampleApi.Repository;
 using SampleApi.Models;
@@ -14,29 +15,27 @@ namespace SampleApi.Controllers
     [Route("~/v1/items")]
     public class ItemsController : BaseController
     {
-        public ItemsController(IRepository repository) : base(repository)
-        {
-
-        }
+        public ItemsController(IRepository repository, IMapper mapper) : base(repository, mapper)
+        { }
 
         [PaginationHeadersFilter]
         [HttpGet]
         [Authorize(Policy = PermissionClaims.ReadItem)]
-        public async Task<IActionResult> GetList(PaginationViewModel pagination)
+        public async Task<IActionResult> GetAll(PaginationViewModel pagination)
         {
             int count = await repository.GetCountAsync<Item>(null);
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = pagination.Page.ToString();
             HttpContext.Items["limit"] = pagination.Limit.ToString();
-            var entityList = await repository.GetAllAsync<Item, ItemDto>(ItemDto.SelectProperties, null, null, pagination.Skip, pagination.Limit);
-            return Ok(entityList);
+            var entities = await repository.GetAllAsync<Item, ItemDto>(null, null, pagination.Skip, pagination.Limit);
+            return Ok(entities);
         }
 
         [HttpGet("{id}")]
         [Authorize(Policy = PermissionClaims.ReadItem)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            var entity = await repository.GetByIdAsync<Item, ItemDto>(id, ItemDto.SelectProperties);
+            var entity = await repository.GetByIdAsync<Item, ItemDto>(id);
             if (entity != null)
             {
                 return Ok(entity);
@@ -46,14 +45,9 @@ namespace SampleApi.Controllers
 
         [HttpPost]
         [Authorize(Policy = PermissionClaims.CreateItem)]
-        public async Task<IActionResult> Create([FromBody] ItemViewModel newItem)
+        public async Task<IActionResult> Create([FromBody] ItemViewModel viewModel)
         {
-            var item = new Item
-            {
-                Name = newItem.Name,
-                Cost = newItem.Cost,
-                Color = newItem.Color
-            };
+            Item item = mapper.Map<Item>(viewModel);
             repository.Create(item);
             await repository.SaveAsync();
             return Created($"/api/v1/items/{item.Id}", new { message = "Item was created successfully!" });
