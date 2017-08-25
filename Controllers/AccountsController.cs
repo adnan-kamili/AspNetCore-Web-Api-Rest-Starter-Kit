@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using SampleApi.Repository;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 using SampleApi.Models;
 using SampleApi.ViewModels;
@@ -40,6 +41,12 @@ namespace SampleApi.Controllers
                 Company = model.Company
             };
             _repository.Create(tenant);
+            _repository.TenantId = tenant.Id;
+            var adminRole = new Role();
+            adminRole.Name = "admin";
+            adminRole.NormalizedName = "ADMIN";
+            adminRole.Description = "Admin user with all the permissions";
+            _repository.Create(adminRole);
             await _repository.SaveAsync();
             var user = new User
             {
@@ -48,6 +55,13 @@ namespace SampleApi.Controllers
                 Name = model.Name,
                 TenantId = tenant.Id
             };
+            user.Roles = new List<IdentityUserRole<string>>(){
+                new IdentityUserRole<string>()
+                {
+                    RoleId = adminRole.Id,
+                    UserId = user.Id
+                }
+            };
             var userCreationResult = await _repository.GetUserManager().CreateAsync(user, model.Password);
             if (!userCreationResult.Succeeded)
             {
@@ -55,27 +69,11 @@ namespace SampleApi.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
+                _repository.Delete(adminRole);
                 _repository.Delete(tenant);
                 await _repository.SaveAsync();
                 return BadRequest(ModelState);
             }
-            var adminRole = new Role();
-            adminRole.Name = "admin";
-            adminRole.TenantId = tenant.Id;
-            adminRole.Description = "Admin user with all the permissions";
-            var roleCreationResult = await _repository.GetRoleManager().CreateAsync(adminRole);
-            if (!roleCreationResult.Succeeded)
-            {
-                foreach (var error in roleCreationResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                _repository.Delete(tenant);
-                await _repository.GetUserManager().DeleteAsync(user);
-                await _repository.SaveAsync();
-                return BadRequest(ModelState);
-            }
-            await _repository.GetUserManager().AddToRoleAsync(user, adminRole.Name);
             return Created($"/api/v1/users/{user.Id}", new { message = "User account was created successfully!" });
         }
 

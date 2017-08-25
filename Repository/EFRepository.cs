@@ -144,6 +144,13 @@ namespace SampleApi.Repository
 
             context.Set<TEntity>().Add(entity);
         }
+
+        public virtual void Update<TEntity>(TEntity entity) where TEntity : class, IEntity
+        {
+            entity.ModifiedAt = DateTime.UtcNow;
+            context.Entry(entity);
+        }
+
         public virtual void Update<TEntity, TModel>(TEntity entity, TModel updatedModel) where TEntity : class, IEntity
         {
             bool modified = false;
@@ -177,6 +184,12 @@ namespace SampleApi.Repository
                 dbSet.Attach(entity);
             }
             dbSet.Remove(entity);
+        }
+
+        public virtual void Delete<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : class
+        {
+            var dbSet = context.Set<TEntity>();
+            dbSet.RemoveRange(context.Set<TEntity>().Where(filter));
         }
 
         public virtual Task SaveAsync()

@@ -6,6 +6,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
+
 using AutoMapper;
 
 using SampleApi.Repository;
@@ -61,8 +64,11 @@ namespace SampleApi.Controllers
                 ModelState.AddModelError("Role", $"Role {viewModel.Name} already exists.");
                 return BadRequest(ModelState);
             }
+            var role = mapper.Map<Role>(viewModel);
+            role.NormalizedName = role.Name.ToUpper();
             if (viewModel.Claims != null)
             {
+                role.Claims = new List<IdentityRoleClaim<string>>();
                 foreach (var claim in viewModel.Claims)
                 {
                     if (!PermissionClaims.GetAll().Contains(claim))
@@ -70,28 +76,15 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Claims", $"Claim {claim} does not exist.");
                         return BadRequest(ModelState);
                     }
+                    role.Claims.Add(new IdentityRoleClaim<string>(){
+                        RoleId = role.Id,
+                        ClaimType = CustomClaimTypes.Permission,
+                        ClaimValue = claim
+                    });
                 }
             }
-            var role = mapper.Map<Role>(viewModel);
-            role.TenantId = this.repository.TenantId;
-            role.CreatedAt = DateTime.UtcNow;
-            role.ModifiedAt = DateTime.UtcNow;
-            var roleCreationResult = await repository.GetRoleManager().CreateAsync(role);
-            if (!roleCreationResult.Succeeded)
-            {
-                foreach (var error in roleCreationResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                return BadRequest(ModelState);
-            }
-            if (viewModel.Claims != null)
-            {
-                foreach (var roleClaim in viewModel.Claims)
-                {
-                    await repository.GetRoleManager().AddClaimAsync(role, new Claim(CustomClaimTypes.Permission, roleClaim));
-                }
-            }
+            repository.Create(role);
+            await repository.SaveAsync();
             return Created($"/api/v1/roles/{role.Id}", new { message = "Role was created successfully!" });
         }
 
@@ -99,14 +92,13 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.UpdateRole)]
         public async Task<IActionResult> Update([FromRoute] string id, [FromBody] RoleViewModel viewModel)
         {
-            Role role = await repository.GetByIdAsync<Role>(id);
+            Role role = await repository.GetByIdAsync<Role>(id, _includeProperties);
             if (role == null)
             {
                 return NotFound(new { message = "Role does not exist!" });
             }
-            if (role.Name == "admin")
+            if (role.NormalizedName == "ADMIN")
             {
-                // admin role can't be updated
                 return Forbid();
             }
             if (viewModel.Name.ToUpper() != role.NormalizedName)
@@ -119,8 +111,20 @@ namespace SampleApi.Controllers
                     return BadRequest(ModelState);
                 }
             }
+
+            if (!String.IsNullOrEmpty(role.Name))
+            {
+                role.Name = viewModel.Name;
+                role.NormalizedName = viewModel.Name.ToUpper();
+            }
+            if (!String.IsNullOrEmpty(viewModel.Description))
+            {
+                role.Description = viewModel.Description;
+            }
             if (viewModel.Claims != null)
             {
+                repository.Delete<IdentityRoleClaim<string>>(claim=> claim.RoleId == role.Id);
+                role.Claims = new List<IdentityRoleClaim<string>>();
                 foreach (var claim in viewModel.Claims)
                 {
                     if (!PermissionClaims.GetAll().Contains(claim))
@@ -128,39 +132,15 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Claims", $"Claim {claim} does not exist.");
                         return BadRequest(ModelState);
                     }
+                    role.Claims.Add(new IdentityRoleClaim<string>(){
+                        RoleId = role.Id,
+                        ClaimType = CustomClaimTypes.Permission,
+                        ClaimValue = claim
+                    });
                 }
             }
-
-            if (!String.IsNullOrEmpty(role.Name))
-            {
-                role.Name = viewModel.Name;
-            }
-            if (!String.IsNullOrEmpty(viewModel.Description))
-            {
-                role.Description = viewModel.Description;
-            }
-            role.ModifiedAt = DateTime.UtcNow;
-            var roleUpdateResult = await repository.GetRoleManager().UpdateAsync(role);
-            if (!roleUpdateResult.Succeeded)
-            {
-                foreach (var error in roleUpdateResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                return BadRequest(ModelState);
-            }
-            if (viewModel.Claims != null)
-            {
-                var claimsToRemove = await repository.GetRoleManager().GetClaimsAsync(role);
-                foreach (var roleClaim in claimsToRemove)
-                {
-                    await repository.GetRoleManager().RemoveClaimAsync(role, roleClaim);
-                }
-                foreach (var roleClaim in viewModel.Claims)
-                {
-                    await repository.GetRoleManager().AddClaimAsync(role, new Claim(CustomClaimTypes.Permission, roleClaim));
-                }
-            }
+            repository.Update(role);
+            await repository.SaveAsync();
             return NoContent();
         }
 
@@ -173,27 +153,18 @@ namespace SampleApi.Controllers
             {
                 return NotFound(new { message = "Role does not exist!" });
             }
-            if (role.Name == "admin")
+            if (role.NormalizedName == "ADMIN")
             {
-                // admin role can't be deleted
                 return Forbid();
             }
             Expression<Func<User, bool>> filter = user => user.Roles.Select(r => r.RoleId).Any(roleId => roleId == role.Id);
-            int count = await repository.GetCountAsync<User>(filter);
-            if (count > 0)
+            if (await repository.AnyAsync<User>(filter))
             {
                 this.HttpContext.Response.StatusCode = StatusCodes.Status409Conflict;
                 return Json(new { message = "Role is in use!" });
             }
-            var roleDeleteResult = repository.GetRoleManager().DeleteAsync(role).Result;
-            if (!roleDeleteResult.Succeeded)
-            {
-                foreach (var error in roleDeleteResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                return BadRequest(ModelState);
-            }
+            repository.Delete(role);
+            await repository.SaveAsync();
             return NoContent();
         }
     }

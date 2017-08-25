@@ -47,9 +47,13 @@ namespace SampleApi.Repository
 
         void Create<TEntity>(TEntity entity) where TEntity : class, IEntity;
 
+        void Update<TEntity>(TEntity entity) where TEntity : class, IEntity;
+
         void Update<TEntity, TModel>(TEntity entity, TModel updatedEntity) where TEntity : class, IEntity;
 
         void Delete<TEntity>(TEntity entity) where TEntity : class, IEntity;
+
+        void Delete<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : class;
 
         Task SaveAsync();
 
