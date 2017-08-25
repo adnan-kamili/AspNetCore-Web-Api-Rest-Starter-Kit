@@ -59,7 +59,10 @@ namespace SampleApi.Controllers
                 await _repository.SaveAsync();
                 return BadRequest(ModelState);
             }
-            var adminRole = new Role("admin", tenant.Id, "Admin user with all the permissions");
+            var adminRole = new Role();
+            adminRole.Name = "admin";
+            adminRole.TenantId = tenant.Id;
+            adminRole.Description = "Admin user with all the permissions";
             var roleCreationResult = await _repository.GetRoleManager().CreateAsync(adminRole);
             if (!roleCreationResult.Succeeded)
             {

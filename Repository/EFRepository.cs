@@ -86,6 +86,17 @@ namespace SampleApi.Repository
             return await GetQueryable<TEntity>(null, orderBy, includeProperties, skip, limit).Select(entity => _mapper.Map<TResult>(entity)).ToListAsync();
         }
 
+        public virtual async Task<IEnumerable<TEntity>> GetAsync<TEntity>(
+            Expression<Func<TEntity, bool>> filter = null,
+            int? skip = null,
+            int? limit = null,
+            string[] includeProperties = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null)
+            where TEntity : class, IEntity
+        {
+            return await GetQueryable<TEntity>(filter, orderBy, includeProperties, skip, limit).ToListAsync();
+        }
+
         public virtual async Task<IEnumerable<TResult>> GetAsync<TEntity, TResult>(
             Expression<Func<TEntity, bool>> filter = null,
             int? skip = null,
@@ -114,6 +125,11 @@ namespace SampleApi.Repository
         public virtual Task<int> GetCountAsync<TEntity>(Expression<Func<TEntity, bool>> filter = null) where TEntity : class, IEntity
         {
             return GetQueryable<TEntity>(filter).CountAsync();
+        }
+
+        public virtual Task<bool> AnyAsync<TEntity>(Expression<Func<TEntity, bool>> filter = null) where TEntity : class, IEntity
+        {
+            return GetQueryable<TEntity>(filter).AnyAsync();
         }
 
         public virtual void Create<TEntity>(TEntity entity) where TEntity : class, IEntity

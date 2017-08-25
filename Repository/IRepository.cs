@@ -13,29 +13,37 @@ namespace SampleApi.Repository
         string TenantId { get; set; }
 
         Task<IEnumerable<TResult>> GetAllAsync<TEntity, TResult>(
-        Expression<Func<TEntity, TResult>> selectProperties,
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-        string[] includeProperties = null,
         int? skip = null,
-        int? limit = null)
+        int? limit = null,
+        string[] includeProperties = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null)
         where TEntity : class, IEntity;
 
-        Task<IEnumerable<TResult>> GetAsync<TEntity, TResult>(
-            Expression<Func<TEntity, TResult>> selectProperties,
+        Task<IEnumerable<TEntity>> GetAsync<TEntity>(
             Expression<Func<TEntity, bool>> filter = null,
-            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-            string[] includeProperties = null,
             int? skip = null,
-            int? limit = null)
+            int? limit = null,
+            string[] includeProperties = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null)
+            where TEntity : class, IEntity;
+
+        Task<IEnumerable<TResult>> GetAsync<TEntity, TResult>(
+            Expression<Func<TEntity, bool>> filter = null,
+            int? skip = null,
+            int? limit = null,
+            string[] includeProperties = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null)
             where TEntity : class, IEntity;
 
         Task<TEntity> GetByIdAsync<TEntity>(string id, string[] includeProperties = null)
             where TEntity : class, IEntity;
 
-        Task<TResult> GetByIdAsync<TEntity, TResult>(string id,string[] includeProperties = null)
+        Task<TResult> GetByIdAsync<TEntity, TResult>(string id, string[] includeProperties = null)
             where TEntity : class, IEntity;
 
         Task<int> GetCountAsync<TEntity>(Expression<Func<TEntity, bool>> filter = null) where TEntity : class, IEntity;
+        
+        Task<bool> AnyAsync<TEntity>(Expression<Func<TEntity, bool>> filter = null) where TEntity : class, IEntity;
 
         void Create<TEntity>(TEntity entity) where TEntity : class, IEntity;
 

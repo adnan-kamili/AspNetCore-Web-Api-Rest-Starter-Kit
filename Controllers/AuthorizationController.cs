@@ -159,8 +159,7 @@ namespace SampleApi.Controllers
             // Get all the roles and add them to the role claim
             foreach (var roleName in roleNames)
             {
-                // Remove tenant id from role name to make it user friendly
-                identity.AddClaim(OpenIdConnectConstants.Claims.Role, roleName.Replace(user.TenantId,string.Empty),
+                identity.AddClaim(OpenIdConnectConstants.Claims.Role, roleName,
                     OpenIdConnectConstants.Destinations.AccessToken,
                     OpenIdConnectConstants.Destinations.IdentityToken);
                 var role = await _repository.GetRoleManager().FindByNameAsync(roleName);

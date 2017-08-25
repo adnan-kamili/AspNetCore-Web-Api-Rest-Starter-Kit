@@ -29,7 +29,7 @@ namespace SampleApi.Controllers
         [PaginationHeadersFilter]
         [HttpGet]
         [Authorize(Policy = PermissionClaims.ReadUsers)]
-        public async Task<IActionResult> GetList([FromQuery] string[] roles, PaginationViewModel pagination)
+        public async Task<IActionResult> GetAll([FromQuery] string[] roles, PaginationViewModel pagination)
         {
             Expression<Func<User, bool>> filter = null;
             if (roles.Length > 0)
@@ -50,15 +50,15 @@ namespace SampleApi.Controllers
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = pagination.Page.ToString();
             HttpContext.Items["limit"] = pagination.Limit.ToString();
-            var userList = await repository.GetAsync<User, UserDto>(UserDto.SelectProperties, filter, null, null, pagination.Skip, pagination.Limit);
-            return Ok(userList);
+            var users = await repository.GetAsync<User, UserDto>(filter, pagination.Skip, pagination.Limit, _includeProperties);
+            return Ok(users);
         }
 
         [HttpGet("{id}")]
         [Authorize(Policy = PermissionClaims.ReadUser)]
         public async Task<IActionResult> Get([FromRoute] string id)
         {
-            User user = null;//await repository.GetByIdAsync<User, UserDto>(id, UserDto.SelectProperties, _includeProperties);
+            var user = await repository.GetByIdAsync<User, UserDto>(id, _includeProperties);
             if (user != null)
             {
                 return Ok(user);
@@ -80,7 +80,9 @@ namespace SampleApi.Controllers
                 UserName = model.Email,
                 Email = model.Email,
                 Name = model.Name,
-                TenantId = repository.TenantId
+                TenantId = repository.TenantId,
+                CreatedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
             };
             if (model.Roles != null)
             {

@@ -23,11 +23,11 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.ReadItem)]
         public async Task<IActionResult> GetAll(PaginationViewModel pagination)
         {
-            int count = await repository.GetCountAsync<Item>(null);
+            int count = await repository.GetCountAsync<Item>();
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = pagination.Page.ToString();
             HttpContext.Items["limit"] = pagination.Limit.ToString();
-            var entities = await repository.GetAllAsync<Item, ItemDto>(null, null, pagination.Skip, pagination.Limit);
+            var entities = await repository.GetAllAsync<Item, ItemDto>(pagination.Skip, pagination.Limit);
             return Ok(entities);
         }
 
