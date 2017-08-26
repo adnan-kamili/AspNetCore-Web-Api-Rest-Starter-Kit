@@ -57,7 +57,7 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.CreateRole)]
         public async Task<IActionResult> Create([FromBody] RoleViewModel viewModel)
         {
-            Expression<Func<Role, bool>> filter = existingRole => existingRole.NormalizedName == viewModel.Name.ToUpper();
+            Expression<Func<Role, bool>> filter = existingRole => existingRole.NormalizedName == viewModel.NormalizedName;
             bool roleExists = await repository.AnyAsync<Role>(filter);
             if (roleExists)
             {
@@ -65,7 +65,7 @@ namespace SampleApi.Controllers
                 return BadRequest(ModelState);
             }
             var role = mapper.Map<Role>(viewModel);
-            role.NormalizedName = role.Name.ToUpper();
+            role.NormalizedName = viewModel.NormalizedName;
             if (viewModel.Claims != null)
             {
                 role.Claims = new List<IdentityRoleClaim<string>>();
@@ -101,9 +101,9 @@ namespace SampleApi.Controllers
             {
                 return Forbid();
             }
-            if (viewModel.Name.ToUpper() != role.NormalizedName)
+            if (viewModel.NormalizedName != role.NormalizedName)
             {
-                Expression<Func<Role, bool>> filter = existingRole => existingRole.NormalizedName == viewModel.Name.ToUpper();
+                Expression<Func<Role, bool>> filter = existingRole => existingRole.NormalizedName == viewModel.NormalizedName;
                 bool roleExists = await repository.AnyAsync<Role>(filter);
                 if (roleExists)
                 {
@@ -115,7 +115,7 @@ namespace SampleApi.Controllers
             if (!String.IsNullOrEmpty(role.Name))
             {
                 role.Name = viewModel.Name;
-                role.NormalizedName = viewModel.Name.ToUpper();
+                role.NormalizedName = viewModel.NormalizedName;
             }
             if (!String.IsNullOrEmpty(viewModel.Description))
             {

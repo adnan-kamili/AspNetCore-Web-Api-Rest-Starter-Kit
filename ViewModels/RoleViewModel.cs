@@ -10,5 +10,12 @@ namespace SampleApi.ViewModels
         public string Description { get; set; }
         [Required]
         public List<string> Claims { get; set; }
+        public string NormalizedName
+        {
+            get
+            {
+                return Name.ToUpper();
+            }
+        }
     }
 }

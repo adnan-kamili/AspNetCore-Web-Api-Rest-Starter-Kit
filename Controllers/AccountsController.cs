@@ -53,7 +53,9 @@ namespace SampleApi.Controllers
                 UserName = model.Email,
                 Email = model.Email,
                 Name = model.Name,
-                TenantId = tenant.Id
+                TenantId = tenant.Id,
+                CreatedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
             };
             user.Roles= new List<UserRole>(){
                 new UserRole()
