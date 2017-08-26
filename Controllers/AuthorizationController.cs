@@ -24,6 +24,7 @@ namespace SampleApi.Controllers
 {
     public class AuthorizationController : Controller
     {
+        private string[] _includeProperties = { "Roles.Role.Claims" };
         private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
         private readonly IRepository _repository;
         private readonly AppOptions _appOptions;
@@ -43,7 +44,7 @@ namespace SampleApi.Controllers
         {
             if (request.IsPasswordGrantType())
             {
-                var user = await _repository.GetUserManager().FindByNameAsync(request.Username);
+                var user = await _repository.GetOneAsync<User>(u => u.Email == request.Username, _includeProperties);
                 if (user == null)
                 {
                     return BadRequest(new OpenIdConnectResponse
@@ -54,24 +55,24 @@ namespace SampleApi.Controllers
                 }
 
                 // Ensure the user is allowed to sign in.
-                if (!await _repository.GetSignInManager().CanSignInAsync(user))
-                {
-                    return BadRequest(new OpenIdConnectResponse
-                    {
-                        Error = OpenIdConnectConstants.Errors.InvalidGrant,
-                        ErrorDescription = "The specified user is not allowed to sign in."
-                    });
-                }
+                // if (!await _repository.GetSignInManager().CanSignInAsync(user))
+                // {
+                //     return BadRequest(new OpenIdConnectResponse
+                //     {
+                //         Error = OpenIdConnectConstants.Errors.InvalidGrant,
+                //         ErrorDescription = "The specified user is not allowed to sign in."
+                //     });
+                // }
 
                 // Reject the token request if two-factor authentication has been enabled by the user.
-                if (_repository.GetUserManager().SupportsUserTwoFactor && await _repository.GetUserManager().GetTwoFactorEnabledAsync(user))
-                {
-                    return BadRequest(new OpenIdConnectResponse
-                    {
-                        Error = OpenIdConnectConstants.Errors.InvalidGrant,
-                        ErrorDescription = "The specified user is not allowed to sign in."
-                    });
-                }
+                // if (_repository.GetUserManager().SupportsUserTwoFactor && await _repository.GetUserManager().GetTwoFactorEnabledAsync(user))
+                // {
+                //     return BadRequest(new OpenIdConnectResponse
+                //     {
+                //         Error = OpenIdConnectConstants.Errors.InvalidGrant,
+                //         ErrorDescription = "The specified user is not allowed to sign in."
+                //     });
+                // }
 
                 // Ensure the user is not already locked out.
                 if (_repository.GetUserManager().SupportsUserLockout && await _repository.GetUserManager().IsLockedOutAsync(user))
@@ -153,18 +154,18 @@ namespace SampleApi.Controllers
                 OpenIdConnectServerDefaults.AuthenticationScheme,
                 OpenIdConnectConstants.Claims.Name,
                 OpenIdConnectConstants.Claims.Role);
-            var roleNames = await _repository.GetUserManager().GetRolesAsync(user);
-            var permissionClaims = new List<Claim>();
+            //var roleNames = await _repository.GetUserManager().GetRolesAsync(user);
+            var permissionClaims = new List<string>();
 
             // Get all the roles and add them to the role claim
-            foreach (var roleName in roleNames)
+            foreach (var userRole in user.Roles)
             {
-                identity.AddClaim(OpenIdConnectConstants.Claims.Role, roleName,
+                identity.AddClaim(OpenIdConnectConstants.Claims.Role, userRole.Role.Name,
                     OpenIdConnectConstants.Destinations.AccessToken,
                     OpenIdConnectConstants.Destinations.IdentityToken);
-                var role = await _repository.GetRoleManager().FindByNameAsync(roleName);
+                //var role = await _repository.GetRoleManager().FindByNameAsync(roleName);
                 // Get all the permission claims of the role
-                permissionClaims.AddRange(await _repository.GetRoleManager().GetClaimsAsync(role));
+                permissionClaims.AddRange(userRole.Role.Claims.Select(c => c.ClaimValue));//await _repository.GetRoleManager().GetClaimsAsync());
             }
             // Get all the permission claims of the user if any
 
@@ -204,7 +205,7 @@ namespace SampleApi.Controllers
             // Add permission claims to scope
             foreach (var claim in permissionClaims)
             {
-                scopes.Add(claim.Value);
+                scopes.Add(claim);
             }
             ticket.SetScopes(scopes);
             ticket.SetAudiences(_appOptions.Jwt.Audiences);

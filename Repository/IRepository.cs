@@ -35,6 +35,11 @@ namespace SampleApi.Repository
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null)
             where TEntity : class, IEntity;
 
+        Task<TEntity> GetOneAsync<TEntity>(
+            Expression<Func<TEntity, bool>> filter = null,
+            string[] includeProperties = null)
+            where TEntity : class, IEntity;
+
         Task<TEntity> GetByIdAsync<TEntity>(string id, string[] includeProperties = null)
             where TEntity : class, IEntity;
 

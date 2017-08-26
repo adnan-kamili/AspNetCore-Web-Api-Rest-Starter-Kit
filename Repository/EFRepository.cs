@@ -45,7 +45,7 @@ namespace SampleApi.Repository
         {
             IQueryable<TEntity> query = context.Set<TEntity>();
             includeProperties = includeProperties ?? new string[] { };
-            if (typeof(ITenantEntity).GetTypeInfo().IsAssignableFrom(typeof(TEntity).Ge‌​tTypeInfo()))
+            if (TenantId != null && typeof(ITenantEntity).GetTypeInfo().IsAssignableFrom(typeof(TEntity).Ge‌​tTypeInfo()))
             {
                 query = query.Where(entity => ((ITenantEntity)entity).TenantId == TenantId);
             }
@@ -106,6 +106,14 @@ namespace SampleApi.Repository
             where TEntity : class, IEntity
         {
             return await GetQueryable<TEntity>(filter, orderBy, includeProperties, skip, limit).Select(entity => _mapper.Map<TResult>(entity)).ToListAsync();
+        }
+
+        public virtual Task<TEntity> GetOneAsync<TEntity>(
+            Expression<Func<TEntity, bool>> filter = null,
+            string[] includeProperties = null)
+            where TEntity : class, IEntity
+        {
+            return  GetQueryable<TEntity>(filter, null, includeProperties).SingleOrDefaultAsync();
         }
 
         public virtual Task<TEntity> GetByIdAsync<TEntity>(string id, string[] includeProperties = null)

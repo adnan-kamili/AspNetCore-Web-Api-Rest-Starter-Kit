@@ -68,7 +68,6 @@ namespace SampleApi.Controllers
             role.NormalizedName = viewModel.NormalizedName;
             if (viewModel.Claims != null)
             {
-                role.Claims = new List<IdentityRoleClaim<string>>();
                 foreach (var claim in viewModel.Claims)
                 {
                     if (!PermissionClaims.GetAll().Contains(claim))
@@ -124,7 +123,6 @@ namespace SampleApi.Controllers
             if (viewModel.Claims != null)
             {
                 repository.Delete<IdentityRoleClaim<string>>(claim=> claim.RoleId == role.Id);
-                role.Claims = new List<IdentityRoleClaim<string>>();
                 foreach (var claim in viewModel.Claims)
                 {
                     if (!PermissionClaims.GetAll().Contains(claim))

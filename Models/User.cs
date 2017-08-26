@@ -21,6 +21,6 @@ namespace SampleApi.Models
         [DataType(DataType.DateTime)]
         public DateTime ModifiedAt { get; set; }
 
-        public ICollection<UserRole> Roles { get; set; }
+        public ICollection<UserRole> Roles { get; set; } = new List<UserRole>();
     }
 }
