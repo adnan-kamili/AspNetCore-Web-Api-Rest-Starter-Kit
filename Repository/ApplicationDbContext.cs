@@ -31,7 +31,12 @@ namespace SampleApi.Repository
                 .HasForeignKey(e => e.UserId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
+            modelBuilder.Entity<UserRole>().HasOne<User>(e => e.User)
+                .WithOne().HasForeignKey<UserRole>(e => e.UserId);
+            modelBuilder.Entity<UserRole>().HasOne<Role>(e => e.Role)
+                .WithOne().HasForeignKey<UserRole>(e => e.RoleId);
+
             modelBuilder.Entity<Role>(model =>
             {
                 model.HasIndex(r => r.NormalizedName).HasName("RoleNameIndex").IsUnique(false);

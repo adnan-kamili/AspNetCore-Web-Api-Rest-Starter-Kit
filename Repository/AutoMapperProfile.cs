@@ -18,7 +18,7 @@ namespace SampleApi.Repository
                     option => option.Ignore());
             CreateMap<User, UserDto>()
                 .ForMember(userDto => userDto.Roles,
-                    option => option.MapFrom(user => user.Roles.Select(role => role.RoleId)));
+                    option => option.MapFrom(user => user.Roles.Select(role => role.Role.Name)));
 
             CreateMap<RoleViewModel, Role>()
                 .ForMember(roleViewModel => roleViewModel.Claims,
