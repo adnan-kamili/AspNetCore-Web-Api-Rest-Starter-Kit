@@ -15,11 +15,25 @@ namespace SampleApi.Repository
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // modelBuilder.Entity<ActivityScenario>()
-            //     .HasKey(t => new { t.ActivityId, t.ScenarioId });
-
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Role>(model => {
+            // modelBuilder.Entity<UserRole>()
+            //     .HasKey(t => new { t.UserId, t.RoleId });
+            modelBuilder.Entity<Role>()
+                .HasMany(e => e.Claims)
+                .WithOne()
+                .HasForeignKey(e => e.RoleId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<User>()
+                .HasMany(e => e.Roles)
+                .WithOne()
+                .HasForeignKey(e => e.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            modelBuilder.Entity<Role>(model =>
+            {
                 model.HasIndex(r => r.NormalizedName).HasName("RoleNameIndex").IsUnique(false);
                 model.HasIndex(r => new { r.NormalizedName, r.TenantId }).HasName("TenantRoleNameIndex").IsUnique();
             });

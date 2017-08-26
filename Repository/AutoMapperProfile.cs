@@ -14,7 +14,7 @@ namespace SampleApi.Repository
         public AutoMapperProfile()
         {
             CreateMap<UserViewModel, User>()
-                .ForMember(userViewModel => userViewModel.Roles,
+                .ForMember(user => user.Roles,
                     option => option.Ignore());
             CreateMap<User, UserDto>()
                 .ForMember(userDto => userDto.Roles,

@@ -55,8 +55,8 @@ namespace SampleApi.Controllers
                 Name = model.Name,
                 TenantId = tenant.Id
             };
-            user.Roles = new List<IdentityUserRole<string>>(){
-                new IdentityUserRole<string>()
+            user.Roles= new List<UserRole>(){
+                new UserRole()
                 {
                     RoleId = adminRole.Id,
                     UserId = user.Id
