@@ -122,6 +122,7 @@ namespace SampleApi.Controllers
             }
             if (viewModel.Claims != null)
             {
+                role.Claims.Clear();
                 repository.Delete<IdentityRoleClaim<string>>(claim=> claim.RoleId == role.Id);
                 foreach (var claim in viewModel.Claims)
                 {

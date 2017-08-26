@@ -21,7 +21,7 @@ namespace SampleApi.Controllers
     [Route("~/v1/users")]
     public class UsersController : BaseController
     {
-        private string[] _includeProperties = { "Roles" };
+        private string[] _includeProperties = { "Roles.Role" };
         public UsersController(IRepository repository, IMapper mapper) : base(repository, mapper)
         {
         }
@@ -29,28 +29,13 @@ namespace SampleApi.Controllers
         [PaginationHeadersFilter]
         [HttpGet]
         [Authorize(Policy = PermissionClaims.ReadUsers)]
-        public async Task<IActionResult> GetAll([FromQuery] string[] roles, PaginationViewModel pagination)
+        public async Task<IActionResult> GetAll(PaginationViewModel pagination)
         {
-            Expression<Func<User, bool>> filter = null;
-            if (roles.Length > 0)
-            {
-                var roleIds = new List<string>();
-                foreach (string roleName in roles)
-                {
-                    var role = await repository.GetRoleManager().FindByNameAsync(roleName + repository.TenantId);
-                    if (role != null)
-                    {
-                        roleIds.Add(role.Id);
-                    }
-                }
-                // get users by given roles
-                filter = user => user.Roles.Select(role => role.RoleId).Any(roleId => roleIds.Contains(roleId));
-            }
-            int count = await repository.GetCountAsync<User>(filter);
+            int count = await repository.GetCountAsync<User>();
             HttpContext.Items["count"] = count.ToString();
             HttpContext.Items["page"] = pagination.Page.ToString();
             HttpContext.Items["limit"] = pagination.Limit.ToString();
-            var users = await repository.GetAsync<User, UserDto>(filter, pagination.Skip, pagination.Limit, _includeProperties);
+            var users = await repository.GetAllAsync<User, UserDto>(pagination.Skip, pagination.Limit, _includeProperties);
             return Ok(users);
         }
 
