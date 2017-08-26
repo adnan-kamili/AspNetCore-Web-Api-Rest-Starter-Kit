@@ -270,15 +270,14 @@ namespace SampleApi.Controllers
         [Authorize(Policy = PermissionClaims.DeleteUser)]
         public async Task<IActionResult> Delete([FromRoute] string id)
         {
-            User user = await repository.GetByIdAsync<User>(id);
+            User user = await repository.GetByIdAsync<User>(id, _includeProperties);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
             }
-            var adminRole = "admin" + repository.TenantId;
-            if (await repository.GetUserManager().IsInRoleAsync(user, adminRole))
+            var userRoles = await repository.GetUserManager().GetRolesAsync(user);
+            if(userRoles.Contains("admin"))
             {
-                // admin user can't be deleted
                 return Forbid();
             }
             repository.Delete(user);
