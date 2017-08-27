@@ -86,7 +86,8 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Role", $"Role '{roleName}' is an admin role");
                         return BadRequest(ModelState);
                     }
-                    user.Roles.Add(new UserRole(){
+                    user.Roles.Add(new UserRole()
+                    {
                         RoleId = role.Id,
                         UserId = user.Id
                     });
@@ -106,11 +107,11 @@ namespace SampleApi.Controllers
             return Created($"/v1/users/{user.Id}", new { message = "User was created successfully!" });
         }
 
-        [HttpPatch("{id}")] // needs update in update, partial role updates
+        [HttpPatch("{id}")]
         [Authorize(Policy = PermissionClaims.UpdateUser)]
         public async Task<IActionResult> Update([FromRoute] string id, [FromBody] UserViewModel viewModel)
         {
-            User user = await repository.GetByIdAsync<User>(id);
+            User user = await repository.GetByIdAsync<User>(id, _includeProperties);
             if (user == null)
             {
                 return NotFound(new { message = "User does not exist!" });
@@ -123,14 +124,13 @@ namespace SampleApi.Controllers
                     return Forbid();
                 }
             }
-            var newRoles = new List<UserRole>();
-
             // only non-admin  user roles can be updated
-            if (HttpContext.User.IsInRole("admin") && viewModel.Roles != null/* && !user.Roles.Any(role => role.Role.Name == "admin")*/)
+            if (viewModel.Roles != null && HttpContext.User.IsInRole("admin") &&  !user.Roles.Any(role => role.Role.Name == "admin"))
             {
                 var distinctRoles = viewModel.Roles.Distinct().ToList();
+                // remove existing roles not present in update request
+                user.Roles = user.Roles.Where(r => distinctRoles.Contains(r.Role.Name)).ToList();
                 var roles = await repository.GetAsync<Role>();
-                user.Roles = new List<UserRole>();//.Clear();
                 foreach (var roleName in distinctRoles)
                 {
                     var role = roles.Where(r => r.NormalizedName == roleName.ToUpper()).SingleOrDefault();
@@ -144,69 +144,22 @@ namespace SampleApi.Controllers
                         ModelState.AddModelError("Role", $"Role '{roleName}' is an admin role");
                         return BadRequest(ModelState);
                     }
-                    user.Roles.Add(new UserRole(){
-                        RoleId = role.Id,
-                        UserId = user.Id
-                    });
-                }
-                repository.Delete<UserRole>(role=> role.UserId == user.Id);
-                //await repository.SaveAsync();
-                // user.Roles = newRoles;
-                // foreach (var roleId in viewModel.Roles)
-                // {
-                //     var role = await repository.GetByIdAsync<Role>(roleId);
-                //     if (role == null)
-                //     {
-                //         ModelState.AddModelError("Role", $"Role '{roleId}' does not exist");
-                //         return BadRequest(ModelState);
-                //     }
-                //     else if (role.Name == "admin" + repository.TenantId)
-                //     {
-                //         ModelState.AddModelError("Role", $"Role '{roleId}' is an admin role");
-                //         return BadRequest(ModelState);
-                //     }
-                //     /* 
-                //     if (user.Roles.Select(r => r.RoleId == roleId) != null)
-                //     {
-                //         // ensure stored role names are unique across tenants
-                //         rolesToAdd.Add(role.Name + repository.TenantId);
-                //     }
-                //     */
-
-                // }
-                /* 
-                foreach (var userRole in user.Roles)
-                {
-                    if (viewModel.Roles.Contains(userRole.RoleId) == false)
+                    if (!user.Roles.Any(r => r.Role.Name == roleName))
                     {
-                        var role = await repository.GetByIdAsync<Role>(userRole.RoleId);
-                        // ensure stored role names are unique across tenants
-                        rolesToRemove.Add(role.Name + repository.TenantId);
+                        user.Roles.Add(new UserRole()
+                        {
+                            RoleId = role.Id,
+                            UserId = user.Id
+                        });
                     }
+
                 }
-                */
             }
             if (!String.IsNullOrEmpty(viewModel.Name))
             {
-                // user.Name = viewModel.Name;
+                user.Name = viewModel.Name;
             }
-            repository.Update<User>(user);
-            await repository.SaveAsync();
-            // var userUpdateResult = await repository.GetUserManager().UpdateAsync(user);
-            // if (!userUpdateResult.Succeeded)
-            // {
-            //     foreach (var error in userUpdateResult.Errors)
-            //     {
-            //         ModelState.AddModelError(string.Empty, error.Description);
-            //     }
-            //     return BadRequest(ModelState);
-            // }
-            // if (viewModel.Roles != null)
-            // {
-            //     await repository.GetUserManager().RemoveFromRolesAsync(user, rolesToRemove);
-            //     await repository.GetUserManager().AddToRolesAsync(user, rolesToAdd);
-            // }
-
+            await repository.GetUserManager().UpdateAsync(user);
             return NoContent();
         }
 
@@ -291,7 +244,7 @@ namespace SampleApi.Controllers
             }
 
             // Admin user can't be deleted
-            if(user.Roles.Any(role => role.Role.Name == "admin"))
+            if (user.Roles.Any(role => role.Role.Name == "admin"))
             {
                 return Forbid();
             }

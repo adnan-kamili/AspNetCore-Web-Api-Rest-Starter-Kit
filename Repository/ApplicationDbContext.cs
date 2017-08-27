@@ -27,15 +27,17 @@ namespace SampleApi.Repository
 
             modelBuilder.Entity<User>()
                 .HasMany(e => e.Roles)
-                .WithOne()
+                .WithOne("User")
                 .HasForeignKey(e => e.UserId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<UserRole>().HasOne<User>(e => e.User)
-                .WithOne().HasForeignKey<UserRole>(e => e.UserId);
-            modelBuilder.Entity<UserRole>().HasOne<Role>(e => e.Role)
-                .WithOne().HasForeignKey<UserRole>(e => e.RoleId);
+            modelBuilder.Entity<Role>()
+                .HasMany(e => e.Users)
+                .WithOne("Role")
+                .HasForeignKey(e => e.RoleId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Role>(model =>
             {
