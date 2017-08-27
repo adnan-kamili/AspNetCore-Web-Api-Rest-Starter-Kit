@@ -123,8 +123,8 @@ namespace SampleApi.Controllers
             if (viewModel.Claims != null)
             {
                 role.Claims.Clear();
-                repository.Delete<IdentityRoleClaim<string>>(claim=> claim.RoleId == role.Id);
-                foreach (var claim in viewModel.Claims)
+                var distinctClaims = viewModel.Claims.Distinct().ToList();
+                foreach (var claim in distinctClaims)
                 {
                     if (!PermissionClaims.GetAll().Contains(claim))
                     {
@@ -137,6 +137,7 @@ namespace SampleApi.Controllers
                         ClaimValue = claim
                     });
                 }
+                repository.Delete<IdentityRoleClaim<string>>(claim=> claim.RoleId == role.Id);
             }
             repository.Update(role);
             await repository.SaveAsync();

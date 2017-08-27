@@ -14,7 +14,11 @@ namespace SampleApi.ViewModels
         {
             get
             {
-                return Name.ToUpper();
+                if (Name != null)
+                {
+                    return Name.ToUpper();
+                }
+                return null;
             }
         }
     }
