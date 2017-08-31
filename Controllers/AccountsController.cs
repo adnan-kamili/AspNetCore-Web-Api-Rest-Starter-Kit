@@ -80,7 +80,7 @@ namespace SampleApi.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPut("password")]
+        [HttpPut("password-reset-request")]
         public async Task<IActionResult> SendPasswordResetLink([FromBody] UserEmailViewModel model)
         {
             User user = await _repository.GetUserManager().FindByEmailAsync(model.Email);
